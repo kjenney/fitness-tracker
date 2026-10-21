@@ -19,7 +19,12 @@ async function req(path, options = {}) {
 
 export const api = {
   summary: () => req('/summary/'),
-  exercises: () => req('/exercises/'),
+  exercises: {
+    list: () => req('/exercises/'),
+    create: (name) => req('/exercises/', { method: 'POST', body: JSON.stringify({ name }) }),
+    update: (id, name) => req(`/exercises/${id}/`, { method: 'PATCH', body: JSON.stringify({ name }) }),
+    remove: (id) => req(`/exercises/${id}/`, { method: 'DELETE' }),
+  },
   workouts: {
     list: (date) => req('/workouts/' + (date ? `?date=${date}` : '')),
     create: (data) => req('/workouts/', { method: 'POST', body: JSON.stringify(data) }),

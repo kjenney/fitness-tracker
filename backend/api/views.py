@@ -10,7 +10,7 @@ from .models import BodyComp, Exercise, FoodEntry, WorkoutSet
 from .serializers import BodyCompSerializer, ExerciseSerializer, FoodSerializer, WorkoutSerializer
 
 
-class ExerciseViewSet(viewsets.ReadOnlyModelViewSet):
+class ExerciseViewSet(viewsets.ModelViewSet):
     queryset = Exercise.objects.all()
     serializer_class = ExerciseSerializer
 

@@ -19,6 +19,7 @@ export default function App() {
         <nav className="tabs">
           <button className={tab === 'dashboard' ? 'active' : ''} onClick={() => setTab('dashboard')}>Dashboard</button>
           <button className={tab === 'workout' ? 'active' : ''} onClick={() => setTab('workout')}>Workout</button>
+          <button className={tab === 'exercises' ? 'active' : ''} onClick={() => setTab('exercises')}>Exercises</button>
           <button className={tab === 'food' ? 'active' : ''} onClick={() => setTab('food')}>Food</button>
           <button className={tab === 'bodycomp' ? 'active' : ''} onClick={() => setTab('bodycomp')}>Body Comp</button>
         </nav>
@@ -27,6 +28,7 @@ export default function App() {
       <main>
         {tab === 'dashboard' && <Dashboard summary={summary} />}
         {tab === 'workout' && <WorkoutTab onChanged={refresh} />}
+        {tab === 'exercises' && <ExerciseTab />}
         {tab === 'food' && <FoodTab summary={summary} onChanged={refresh} />}
         {tab === 'bodycomp' && <BodyCompTab />}
       </main>
@@ -91,7 +93,7 @@ function WorkoutTab({ onChanged }) {
   const [form, setForm] = useState({ date: todayStr(), exercise: '', weight: '', reps: '', sets: '1', notes: '' })
 
   useEffect(() => {
-    api.exercises().then(setExercises).catch(() => {})
+    api.exercises.list().then(setExercises).catch(() => {})
     loadEntries()
   }, [])
 
@@ -142,6 +144,87 @@ function WorkoutTab({ onChanged }) {
             </tr>
           ))}
           {entries.length === 0 && <tr><td colSpan="6" className="muted">No entries for this date</td></tr>}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+/* ─── Exercises Tab ─── */
+function ExerciseTab() {
+  const [exercises, setExercises] = useState([])
+  const [name, setName] = useState('')
+  const [editing, setEditing] = useState(null)
+  const [editName, setEditName] = useState('')
+
+  const load = () => api.exercises.list().then(setExercises).catch(() => setExercises([]))
+  useEffect(() => { load() }, [])
+
+  const add = (e) => {
+    e.preventDefault()
+    const trimmed = name.trim()
+    if (!trimmed) return
+    api.exercises.create(trimmed).then(() => {
+      setName('')
+      load()
+    })
+  }
+
+  const saveEdit = (id) => {
+    const trimmed = editName.trim()
+    if (!trimmed) return
+    api.exercises.update(id, trimmed).then(() => {
+      setEditing(null)
+      load()
+    })
+  }
+
+  const remove = (id) => { api.exercises.remove(id).then(load) }
+
+  return (
+    <div>
+      <h2>Exercise Library</h2>
+      <p className="muted" style={{ marginBottom: '1rem' }}>Suggestions offered when logging a workout. Removing an exercise does not delete its logged sets.</p>
+      <form className="form" onSubmit={add}>
+        <input type="text" placeholder="Exercise name" value={name} onChange={e => setName(e.target.value)} required />
+        <button type="submit">Add</button>
+      </form>
+
+      <table className="table">
+        <thead><tr><th>Exercise</th><th></th></tr></thead>
+        <tbody>
+          {exercises.map(ex => (
+            <tr key={ex.id}>
+              {editing === ex.id ? (
+                <>
+                  <td>
+                    <input
+                      value={editName}
+                      onChange={e => setEditName(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') saveEdit(ex.id)
+                        if (e.key === 'Escape') setEditing(null)
+                      }}
+                      autoFocus
+                    />
+                  </td>
+                  <td>
+                    <button className="btn-sm good" onClick={() => saveEdit(ex.id)}>Save</button>
+                    <button className="btn-sm" onClick={() => setEditing(null)}>Cancel</button>
+                  </td>
+                </>
+              ) : (
+                <>
+                  <td>{ex.name}</td>
+                  <td>
+                    <button className="btn-sm neutral" onClick={() => { setEditing(ex.id); setEditName(ex.name) }}>Edit</button>
+                    <button className="btn-sm" onClick={() => remove(ex.id)}>Delete</button>
+                  </td>
+                </>
+              )}
+            </tr>
+          ))}
+          {exercises.length === 0 && <tr><td colSpan="2" className="muted">No exercises yet</td></tr>}
         </tbody>
       </table>
     </div>

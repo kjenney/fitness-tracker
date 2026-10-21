@@ -100,6 +100,20 @@ body {
 .table tr:last-child td { border-bottom: none; }
 .btn-sm { background: none; border: none; color: var(--bad); font-size: 1rem; cursor: pointer; padding: 0.25rem; }
 .btn-sm:hover { color: white; }
+.btn-sm.neutral { color: var(--text); }
+.btn-sm.good { color: var(--good); font-size: 0.9rem; }
+
+.table input {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.85rem;
+  width: 100%;
+  max-width: 280px;
+}
+.table input:focus { outline: none; }
 
 .progress-row { margin-bottom: 1rem; }
 .progress-row .progress-bar { margin: 0.25rem 0; }
