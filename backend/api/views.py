@@ -6,9 +6,9 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+
 from .models import BodyComp, Exercise, FoodEntry, WorkoutSet
 from .serializers import BodyCompSerializer, ExerciseSerializer, FoodSerializer, WorkoutSerializer
-
 
 class DateFilterMixin:
     """Restrict list results to one day when ?date=YYYY-MM-DD is given."""
@@ -43,6 +43,25 @@ class FoodViewSet(DateFilterMixin, viewsets.ModelViewSet):
 class BodyCompViewSet(viewsets.ModelViewSet):
     queryset = BodyComp.objects.all()
     serializer_class = BodyCompSerializer
+
+class LastWorkoutForExerciseView(APIView):
+    """Get the most recent workout set for a given exercise."""
+
+    def get(self, request):
+        exercise_name = request.query_params.get('exercise')
+        if not exercise_name:
+            return Response({'error': 'exercise parameter required'}, status=400)
+
+        entry = WorkoutSet.objects.filter(exercise=exercise_name).order_by('-date', '-created_at').first()
+        if entry:
+            return Response({
+                'weight': entry.weight,
+                'reps': entry.reps,
+                'sets': entry.sets,
+                'notes': entry.notes,
+            })
+        return Response({})
+
 
 
 class SummaryView(APIView):

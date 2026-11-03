@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { api, todayStr, fmtDate } from './api.js'
 
+
 export default function App() {
   const [tab, setTab] = useState('dashboard')
   const [summary, setSummary] = useState(null)
@@ -103,6 +104,24 @@ function WorkoutTab({ onChanged }) {
     api.workouts.list(viewDate).then(setEntries).catch(() => setEntries([]))
   }
 
+  const handleExerciseChange = (e) => {
+    const exerciseName = e.target.value
+    setForm({ ...form, exercise: exerciseName })
+    if (exerciseName) {
+      api.workouts.lastForExercise(exerciseName).then(last => {
+        if (last && (last.weight !== null || last.reps !== null)) {
+          setForm(prev => ({
+            ...prev,
+            weight: last.weight ?? '',
+            reps: last.reps ?? '',
+            sets: last.sets?.toString() ?? '1',
+            notes: last.notes ?? '',
+          }))
+        }
+      }).catch(() => {})
+    }
+  }
+
   useEffect(() => { loadEntries() }, [viewDate])
 
   const submit = (e) => {
@@ -133,7 +152,7 @@ function WorkoutTab({ onChanged }) {
         <>
           <h2>Log a Set</h2>
           <form className="form" onSubmit={submit}>
-            <select value={form.exercise} onChange={e => setForm({ ...form, exercise: e.target.value })} required>
+            <select value={form.exercise} onChange={handleExerciseChange} required>
               <option value="">Select exercise…</option>
               {exercises.map(ex => <option key={ex.id} value={ex.name}>{ex.name}</option>)}
             </select>

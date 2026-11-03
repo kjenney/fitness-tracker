@@ -1,5 +1,6 @@
 const BASE = '/api'
 
+
 async function req(path, options = {}) {
   const res = await fetch(BASE + path, {
     headers: { 'Content-Type': 'application/json' },
@@ -29,6 +30,7 @@ export const api = {
     list: (date) => req('/workouts/' + (date ? `?date=${date}` : '')),
     create: (data) => req('/workouts/', { method: 'POST', body: JSON.stringify(data) }),
     remove: (id) => req(`/workouts/${id}/`, { method: 'DELETE' }),
+    lastForExercise: (exercise) => req('/last-workout/' + (exercise ? `?exercise=${encodeURIComponent(exercise)}` : '')),
   },
   food: {
     list: (date) => req('/food/' + (date ? `?date=${date}` : '')),
