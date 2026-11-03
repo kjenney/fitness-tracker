@@ -90,22 +90,31 @@ function Dashboard({ summary }) {
 function WorkoutTab({ onChanged }) {
   const [exercises, setExercises] = useState([])
   const [entries, setEntries] = useState([])
-  const [form, setForm] = useState({ date: todayStr(), exercise: '', weight: '', reps: '', sets: '1', notes: '' })
+  const [viewDate, setViewDate] = useState(todayStr())
+  const [form, setForm] = useState({ exercise: '', weight: '', reps: '', sets: '1', notes: '' })
+
+  const isToday = viewDate === todayStr()
 
   useEffect(() => {
     api.exercises.list().then(setExercises).catch(() => {})
-    loadEntries()
   }, [])
 
   const loadEntries = () => {
-    api.workouts.list(form.date).then(setEntries).catch(() => setEntries([]))
+    api.workouts.list(viewDate).then(setEntries).catch(() => setEntries([]))
   }
+
+  useEffect(() => { loadEntries() }, [viewDate])
 
   const submit = (e) => {
     e.preventDefault()
-    const data = { ...form, weight: form.weight ? +form.weight : null, reps: form.reps ? +form.reps : null }
+    const data = {
+      date: todayStr(),
+      ...form,
+      weight: form.weight ? +form.weight : null,
+      reps: form.reps ? +form.reps : null,
+    }
     api.workouts.create(data).then(() => {
-      setForm({ ...form, weight: '', reps: '' })
+      setForm({ exercise: '', weight: '', reps: '', sets: '1', notes: '' })
       loadEntries()
       onChanged()
     })
@@ -115,21 +124,31 @@ function WorkoutTab({ onChanged }) {
 
   return (
     <div>
-      <h2>Log a Set</h2>
-      <form className="form" onSubmit={submit}>
-        <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
-        <select value={form.exercise} onChange={e => setForm({ ...form, exercise: e.target.value })} required>
-          <option value="">Select exercise…</option>
-          {exercises.map(ex => <option key={ex.id} value={ex.name}>{ex.name}</option>)}
-        </select>
-        <input type="number" placeholder="Weight (lb)" min="0" step="5" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} />
-        <input type="number" placeholder="Reps" min="0" value={form.reps} onChange={e => setForm({ ...form, reps: e.target.value })} />
-        <input type="number" placeholder="Sets" min="1" value={form.sets} onChange={e => setForm({ ...form, sets: e.target.value })} />
-        <input type="text" placeholder="Notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
-        <button type="submit">Add</button>
-      </form>
+      <div className="form">
+        <span className="muted">View day</span>
+        <input type="date" value={viewDate} max={todayStr()} onChange={e => e.target.value && setViewDate(e.target.value)} />
+      </div>
 
-      <h3 className="section-title">Logs for {fmtDate(form.date)}</h3>
+      {isToday ? (
+        <>
+          <h2>Log a Set</h2>
+          <form className="form" onSubmit={submit}>
+            <select value={form.exercise} onChange={e => setForm({ ...form, exercise: e.target.value })} required>
+              <option value="">Select exercise…</option>
+              {exercises.map(ex => <option key={ex.id} value={ex.name}>{ex.name}</option>)}
+            </select>
+            <input type="number" placeholder="Weight (lb)" min="0" step="5" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} />
+            <input type="number" placeholder="Reps" min="0" value={form.reps} onChange={e => setForm({ ...form, reps: e.target.value })} />
+            <input type="number" placeholder="Sets" min="1" value={form.sets} onChange={e => setForm({ ...form, sets: e.target.value })} />
+            <input type="text" placeholder="Notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
+            <button type="submit">Add</button>
+          </form>
+        </>
+      ) : (
+        <p className="muted" style={{ marginBottom: '1rem' }}>Sets can only be logged for today — this day is shown as recorded.</p>
+      )}
+
+      <h3 className="section-title">Logs for {fmtDate(viewDate)}</h3>
       <table className="table">
         <thead><tr><th>Exercise</th><th>Weight</th><th>Reps</th><th>Sets</th><th>Notes</th><th></th></tr></thead>
         <tbody>
@@ -154,8 +173,10 @@ function WorkoutTab({ onChanged }) {
 function ExerciseTab() {
   const [exercises, setExercises] = useState([])
   const [name, setName] = useState('')
+  const [url, setUrl] = useState('')
   const [editing, setEditing] = useState(null)
   const [editName, setEditName] = useState('')
+  const [editUrl, setEditUrl] = useState('')
 
   const load = () => api.exercises.list().then(setExercises).catch(() => setExercises([]))
   useEffect(() => { load() }, [])
@@ -164,8 +185,9 @@ function ExerciseTab() {
     e.preventDefault()
     const trimmed = name.trim()
     if (!trimmed) return
-    api.exercises.create(trimmed).then(() => {
+    api.exercises.create({ name: trimmed, url: url.trim() }).then(() => {
       setName('')
+      setUrl('')
       load()
     })
   }
@@ -173,7 +195,7 @@ function ExerciseTab() {
   const saveEdit = (id) => {
     const trimmed = editName.trim()
     if (!trimmed) return
-    api.exercises.update(id, trimmed).then(() => {
+    api.exercises.update(id, { name: trimmed, url: editUrl.trim() }).then(() => {
       setEditing(null)
       load()
     })
@@ -187,11 +209,12 @@ function ExerciseTab() {
       <p className="muted" style={{ marginBottom: '1rem' }}>Suggestions offered when logging a workout. Removing an exercise does not delete its logged sets.</p>
       <form className="form" onSubmit={add}>
         <input type="text" placeholder="Exercise name" value={name} onChange={e => setName(e.target.value)} required />
+        <input type="url" placeholder="URL (video, form guide…)" value={url} onChange={e => setUrl(e.target.value)} />
         <button type="submit">Add</button>
       </form>
 
       <table className="table">
-        <thead><tr><th>Exercise</th><th></th></tr></thead>
+        <thead><tr><th>Exercise</th><th>URL</th><th></th></tr></thead>
         <tbody>
           {exercises.map(ex => (
             <tr key={ex.id}>
@@ -209,6 +232,18 @@ function ExerciseTab() {
                     />
                   </td>
                   <td>
+                    <input
+                      type="url"
+                      placeholder="URL"
+                      value={editUrl}
+                      onChange={e => setEditUrl(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') saveEdit(ex.id)
+                        if (e.key === 'Escape') setEditing(null)
+                      }}
+                    />
+                  </td>
+                  <td>
                     <button className="btn-sm good" onClick={() => saveEdit(ex.id)}>Save</button>
                     <button className="btn-sm" onClick={() => setEditing(null)}>Cancel</button>
                   </td>
@@ -216,15 +251,16 @@ function ExerciseTab() {
               ) : (
                 <>
                   <td>{ex.name}</td>
+                  <td>{ex.url ? <a href={ex.url} target="_blank" rel="noopener noreferrer">{ex.url}</a> : <span className="muted">—</span>}</td>
                   <td>
-                    <button className="btn-sm neutral" onClick={() => { setEditing(ex.id); setEditName(ex.name) }}>Edit</button>
+                    <button className="btn-sm neutral" onClick={() => { setEditing(ex.id); setEditName(ex.name); setEditUrl(ex.url) }}>Edit</button>
                     <button className="btn-sm" onClick={() => remove(ex.id)}>Delete</button>
                   </td>
                 </>
               )}
             </tr>
           ))}
-          {exercises.length === 0 && <tr><td colSpan="2" className="muted">No exercises yet</td></tr>}
+          {exercises.length === 0 && <tr><td colSpan="3" className="muted">No exercises yet</td></tr>}
         </tbody>
       </table>
     </div>

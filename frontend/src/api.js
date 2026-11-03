@@ -21,8 +21,8 @@ export const api = {
   summary: () => req('/summary/'),
   exercises: {
     list: () => req('/exercises/'),
-    create: (name) => req('/exercises/', { method: 'POST', body: JSON.stringify({ name }) }),
-    update: (id, name) => req(`/exercises/${id}/`, { method: 'PATCH', body: JSON.stringify({ name }) }),
+    create: (data) => req('/exercises/', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id, data) => req(`/exercises/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }),
     remove: (id) => req(`/exercises/${id}/`, { method: 'DELETE' }),
   },
   workouts: {

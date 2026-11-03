@@ -10,17 +10,32 @@ from .models import BodyComp, Exercise, FoodEntry, WorkoutSet
 from .serializers import BodyCompSerializer, ExerciseSerializer, FoodSerializer, WorkoutSerializer
 
 
+class DateFilterMixin:
+    """Restrict list results to one day when ?date=YYYY-MM-DD is given."""
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        param = self.request.query_params.get("date")
+        if param:
+            try:
+                day = date.fromisoformat(param)
+            except ValueError:
+                return queryset.none()
+            queryset = queryset.filter(date=day)
+        return queryset
+
+
 class ExerciseViewSet(viewsets.ModelViewSet):
     queryset = Exercise.objects.all()
     serializer_class = ExerciseSerializer
 
 
-class WorkoutViewSet(viewsets.ModelViewSet):
+class WorkoutViewSet(DateFilterMixin, viewsets.ModelViewSet):
     queryset = WorkoutSet.objects.all()
     serializer_class = WorkoutSerializer
 
 
-class FoodViewSet(viewsets.ModelViewSet):
+class FoodViewSet(DateFilterMixin, viewsets.ModelViewSet):
     queryset = FoodEntry.objects.all()
     serializer_class = FoodSerializer
 

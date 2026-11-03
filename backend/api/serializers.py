@@ -6,7 +6,7 @@ from .models import BodyComp, Exercise, FoodEntry, WorkoutSet
 class ExerciseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Exercise
-        fields = ["id", "name"]
+        fields = ["id", "name", "url"]
 
 
 class WorkoutSerializer(serializers.ModelSerializer):
