@@ -364,16 +364,75 @@ function FoodTab({ summary, onChanged }) {
 /* ─── Body Comp Tab ─── */
 function BodyCompTab() {
   const [readings, setReadings] = useState([])
-  const [form, setForm] = useState({ date: todayStr(), weight_lb: '', body_fat_pct: '', notes: '' })
+  const [form, setForm] = useState({
+    date: todayStr(),
+    weight_lb: '',
+    body_fat_pct: '',
+    muscle_rate: '',
+    lean_body_mass: '',
+    subcutaneous_fat: '',
+    visceral_fat: '',
+    body_water: '',
+    skeletal_mass_rate: '',
+    muscle_mass: '',
+    bone_mass: '',
+    protein: '',
+    basal_metabolism: '',
+    body_age: '',
+    waist_hip_ratio: '',
+    body_fat_mass: '',
+    water_content: '',
+    protein_mass: '',
+    notes: ''
+  })
 
   const load = () => api.bodycomp.list().then(setReadings).catch(() => {})
   useEffect(() => { load() }, [])
 
   const submit = (e) => {
     e.preventDefault()
-    const data = { ...form, weight_lb: +form.weight_lb, body_fat_pct: form.body_fat_pct ? +form.body_fat_pct : null }
+    const data = {
+      ...form,
+      weight_lb: +form.weight_lb,
+      body_fat_pct: form.body_fat_pct ? +form.body_fat_pct : null,
+      muscle_rate: form.muscle_rate ? +form.muscle_rate : null,
+      lean_body_mass: form.lean_body_mass ? +form.lean_body_mass : null,
+      subcutaneous_fat: form.subcutaneous_fat ? +form.subcutaneous_fat : null,
+      visceral_fat: form.visceral_fat ? +form.visceral_fat : null,
+      body_water: form.body_water ? +form.body_water : null,
+      skeletal_mass_rate: form.skeletal_mass_rate ? +form.skeletal_mass_rate : null,
+      muscle_mass: form.muscle_mass ? +form.muscle_mass : null,
+      bone_mass: form.bone_mass ? +form.bone_mass : null,
+      protein: form.protein ? +form.protein : null,
+      basal_metabolism: form.basal_metabolism ? +form.basal_metabolism : null,
+      body_age: form.body_age ? +form.body_age : null,
+      waist_hip_ratio: form.waist_hip_ratio ? +form.waist_hip_ratio : null,
+      body_fat_mass: form.body_fat_mass ? +form.body_fat_mass : null,
+      water_content: form.water_content ? +form.water_content : null,
+      protein_mass: form.protein_mass ? +form.protein_mass : null
+    }
     api.bodycomp.create(data).then(() => {
-      setForm({ ...form, weight_lb: '', body_fat_pct: '', notes: '' })
+      setForm({
+        ...form,
+        weight_lb: '',
+        body_fat_pct: '',
+        muscle_rate: '',
+        lean_body_mass: '',
+        subcutaneous_fat: '',
+        visceral_fat: '',
+        body_water: '',
+        skeletal_mass_rate: '',
+        muscle_mass: '',
+        bone_mass: '',
+        protein: '',
+        basal_metabolism: '',
+        body_age: '',
+        waist_hip_ratio: '',
+        body_fat_mass: '',
+        water_content: '',
+        protein_mass: '',
+        notes: ''
+      })
       load()
     })
   }
@@ -382,34 +441,78 @@ function BodyCompTab() {
 
   return (
     <div>
-      <h2>Weight & Body Fat</h2>
+      <h2>Body Composition</h2>
       <form className="form" onSubmit={submit}>
         <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
-        <input type="number" placeholder="Weight (lb)" min="0" step="0.1" value={form.weight_lb} onChange={e => setForm({ ...form, weight_lb: e.target.value })} required />
-        <input type="number" placeholder="Body fat %" min="1" max="80" step="0.1" value={form.body_fat_pct} onChange={e => setForm({ ...form, body_fat_pct: e.target.value })} />
+
+        <div className="form-group">
+          <h4>Basic Metrics</h4>
+          <input type="number" placeholder="Weight (lb)" min="0" step="0.1" value={form.weight_lb} onChange={e => setForm({ ...form, weight_lb: e.target.value })} required />
+          <input type="number" placeholder="Body fat %" min="1" max="80" step="0.1" value={form.body_fat_pct} onChange={e => setForm({ ...form, body_fat_pct: e.target.value })} />
+        </div>
+
+        <div className="form-group">
+          <h4>Composition</h4>
+          <input type="number" placeholder="Muscle Rate %" min="0" max="100" step="0.1" value={form.muscle_rate} onChange={e => setForm({ ...form, muscle_rate: e.target.value })} />
+          <input type="number" placeholder="Lean Body Mass (lb)" min="0" step="0.1" value={form.lean_body_mass} onChange={e => setForm({ ...form, lean_body_mass: e.target.value })} />
+          <input type="number" placeholder="Subcutaneous Fat %" min="0" max="100" step="0.1" value={form.subcutaneous_fat} onChange={e => setForm({ ...form, subcutaneous_fat: e.target.value })} />
+          <input type="number" placeholder="Visceral Fat (1-50)" min="1" max="50" step="1" value={form.visceral_fat} onChange={e => setForm({ ...form, visceral_fat: e.target.value })} />
+          <input type="number" placeholder="Body Water %" min="0" max="100" step="0.1" value={form.body_water} onChange={e => setForm({ ...form, body_water: e.target.value })} />
+          <input type="number" placeholder="Skeletal Mass Rate %" min="0" max="100" step="0.1" value={form.skeletal_mass_rate} onChange={e => setForm({ ...form, skeletal_mass_rate: e.target.value })} />
+          <input type="number" placeholder="Muscle Mass (lb)" min="0" step="0.1" value={form.muscle_mass} onChange={e => setForm({ ...form, muscle_mass: e.target.value })} />
+          <input type="number" placeholder="Bone Mass (lb)" min="0" step="0.1" value={form.bone_mass} onChange={e => setForm({ ...form, bone_mass: e.target.value })} />
+          <input type="number" placeholder="Protein %" min="0" max="100" step="0.1" value={form.protein} onChange={e => setForm({ ...form, protein: e.target.value })} />
+        </div>
+
+        <div className="form-group">
+          <h4>Additional Metrics</h4>
+          <input type="number" placeholder="Basal Metabolism (kcal/day)" min="0" step="1" value={form.basal_metabolism} onChange={e => setForm({ ...form, basal_metabolism: e.target.value })} />
+          <input type="number" placeholder="Body Age (years)" min="0" max="120" step="1" value={form.body_age} onChange={e => setForm({ ...form, body_age: e.target.value })} />
+          <input type="number" placeholder="Waist-to-Hip Ratio" min="0" step="0.01" value={form.waist_hip_ratio} onChange={e => setForm({ ...form, waist_hip_ratio: e.target.value })} />
+          <input type="number" placeholder="Body Fat Mass (lb)" min="0" step="0.1" value={form.body_fat_mass} onChange={e => setForm({ ...form, body_fat_mass: e.target.value })} />
+          <input type="number" placeholder="Water Content (lb)" min="0" step="0.1" value={form.water_content} onChange={e => setForm({ ...form, water_content: e.target.value })} />
+          <input type="number" placeholder="Protein Mass (lb)" min="0" step="0.1" value={form.protein_mass} onChange={e => setForm({ ...form, protein_mass: e.target.value })} />
+        </div>
+
         <input type="text" placeholder="Notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
         <button type="submit">Save</button>
       </form>
 
       <h3 className="section-title">History</h3>
       <table className="table">
-        <thead><tr><th>Date</th><th>Weight</th><th>Body Fat %</th><th>Δ Weight</th><th>Notes</th><th></th></tr></thead>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Weight</th>
+            <th>BF %</th>
+            <th>Muscle Rate</th>
+            <th>Lean Body Mass</th>
+            <th>Visceral Fat</th>
+            <th>Notes</th>
+            <th></th>
+          </tr>
+        </thead>
         <tbody>
           {readings.map((r, i) => {
             const prev = readings[i + 1]
-            const delta = prev ? (r.weight_lb - prev.weight_lb).toFixed(1) : ''
+            const weightDelta = prev ? (r.weight_lb - prev.weight_lb).toFixed(1) : ''
+            const bfDelta = prev && r.body_fat_pct !== null && prev.body_fat_pct !== null
+              ? (r.body_fat_pct - prev.body_fat_pct).toFixed(1)
+              : ''
             return (
               <tr key={r.id}>
                 <td>{fmtDate(r.date)}</td>
-                <td>{r.weight_lb} lb</td>
-                <td>{r.body_fat_pct ?? '—'}</td>
-                <td className={delta < 0 ? 'good' : delta > 0 ? 'bad' : ''}>{delta || '—'}</td>
+                <td>{r.weight_lb} lb {weightDelta && <span className={weightDelta < 0 ? 'good' : 'bad'}>({weightDelta > 0 ? '+' : ''}{weightDelta})</span>}</td>
+                <td>{r.body_fat_pct !== null ? `${r.body_fat_pct}%` : '—'} {bfDelta && <span className={bfDelta < 0 ? 'good' : 'bad'}>({bfDelta > 0 ? '+' : ''}{bfDelta}%)</span>}</td>
+                <td>{r.muscle_rate !== null ? `${r.muscle_rate}%` : '—'}</td>
+                <td>{r.lean_body_mass ? `${r.lean_body_mass} lb` : '—'}</td>
+                <td>{r.visceral_fat !== null ? r.visceral_fat : '—'}</td>
                 <td>{r.notes}</td>
                 <td><button className="btn-sm" onClick={() => remove(r.id)}>×</button></td>
               </tr>
             )
           })}
-          {readings.length === 0 && <tr><td colSpan="6" className="muted">No readings yet</td></tr>}
+          {readings.length === 0 && <tr><td colSpan="8" className="muted">No readings yet</td></tr>}
         </tbody>
       </table>
     </div>

@@ -26,5 +26,12 @@ class FoodSerializer(serializers.ModelSerializer):
 class BodyCompSerializer(serializers.ModelSerializer):
     class Meta:
         model = BodyComp
-        fields = ["id", "date", "weight_lb", "body_fat_pct", "notes", "created_at"]
+        fields = [
+            "id", "date", "weight_lb", "body_fat_pct",
+            "muscle_rate", "lean_body_mass", "subcutaneous_fat", "visceral_fat",
+            "body_water", "skeletal_mass_rate", "muscle_mass", "bone_mass",
+            "protein", "basal_metabolism", "body_age", "waist_hip_ratio",
+            "body_fat_mass", "water_content", "protein_mass",
+            "notes", "created_at"
+        ]
         read_only_fields = ["id", "created_at"]
