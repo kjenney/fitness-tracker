@@ -2,6 +2,47 @@ import { useEffect, useState, useCallback } from 'react'
 import { api, todayStr, fmtDate } from './api.js'
 
 
+/* ─── Trend Chart Component ─── */
+function TrendChart({ workouts }) {
+  // Filter out null values for weight or reps to plot
+  const dataPoints = workouts
+    .map((w, i) => ({ ...w, index: i }))
+    .filter(w => w.weight !== null || w.reps !== null)
+
+  if (dataPoints.length < 2) return null
+
+  // Determine which metric to plot (weight preferred if available)
+  const hasWeight = dataPoints.some(w => w.weight !== null)
+  const metric = hasWeight ? 'weight' : 'reps'
+  const values = dataPoints.map(w => w[metric] || 0)
+  const minVal = Math.min(...values)
+  const maxVal = Math.max(...values)
+  const range = maxVal - minVal || 1
+
+  // Create SVG path
+  const width = 120
+  const height = 40
+  const points = dataPoints.map((w, i) => {
+    const x = (i / (dataPoints.length - 1)) * width
+    const y = height - ((w[metric] - minVal) / range) * height
+    return `${x},${y}`
+  }).join(' ')
+
+  return (
+    <svg width={width} height={height} className="trend-chart" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+      <polyline
+        fill="none"
+        stroke="#6366f1"
+        strokeWidth="2"
+        points={points}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+
 export default function App() {
   const [tab, setTab] = useState('dashboard')
   const [summary, setSummary] = useState(null)
@@ -20,6 +61,7 @@ export default function App() {
         <nav className="tabs">
           <button className={tab === 'dashboard' ? 'active' : ''} onClick={() => setTab('dashboard')}>Dashboard</button>
           <button className={tab === 'workout' ? 'active' : ''} onClick={() => setTab('workout')}>Workout</button>
+          <button className={tab === 'progress' ? 'active' : ''} onClick={() => setTab('progress')}>Progress</button>
           <button className={tab === 'exercises' ? 'active' : ''} onClick={() => setTab('exercises')}>Exercises</button>
           <button className={tab === 'food' ? 'active' : ''} onClick={() => setTab('food')}>Food</button>
           <button className={tab === 'bodycomp' ? 'active' : ''} onClick={() => setTab('bodycomp')}>Body Comp</button>
@@ -29,6 +71,7 @@ export default function App() {
       <main>
         {tab === 'dashboard' && <Dashboard summary={summary} />}
         {tab === 'workout' && <WorkoutTab onChanged={refresh} />}
+        {tab === 'progress' && <ProgressTab />}
         {tab === 'exercises' && <ExerciseTab />}
         {tab === 'food' && <FoodTab summary={summary} onChanged={refresh} />}
         {tab === 'bodycomp' && <BodyCompTab />}
@@ -37,10 +80,91 @@ export default function App() {
   )
 }
 
+/* ─── Progress Tab ─── */
+function ProgressTab() {
+  const [progress, setProgress] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    api.exerciseProgress().then(data => {
+      setProgress(data)
+      setLoading(false)
+    }).catch(() => {
+      setLoading(false)
+    })
+  }, [])
+
+  return (
+    <div>
+      <h2>Exercise Progress</h2>
+      <p className="muted" style={{ marginBottom: '1rem' }}>Track changes in weights and reps over time</p>
+
+      {loading ? (
+        <p className="muted">Loading progress data…</p>
+      ) : progress.length > 0 ? (
+        <div className="grid">
+          {progress.map(ex => (
+            <div key={ex.exercise} className="card">
+              <div className="exercise-header">
+                <h3>{ex.exercise}</h3>
+                <span className="muted">{ex.num_sessions} session{ex.num_sessions !== 1 && 's'}</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div>
+                  <p className="muted" style={{ fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Current Weight</p>
+                  <div className="big" style={{ fontSize: '1.4rem' }}>
+                    {ex.current_weight !== null ? `${ex.current_weight} lb` : '—'}
+                    {ex.weight_change !== null && ex.weight_change !== 0 && (
+                      <span className={ex.weight_change > 0 ? 'good' : 'bad'}>
+                        {' '}{ex.weight_change > 0 ? '+' : ''}{ex.weight_change}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p className="muted" style={{ fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Current Reps</p>
+                  <div className="big" style={{ fontSize: '1.4rem' }}>
+                    {ex.current_reps !== null ? ex.current_reps : '—'}
+                    {ex.reps_change !== null && ex.reps_change !== 0 && (
+                      <span className={ex.reps_change > 0 ? 'good' : 'bad'}>
+                        {' '}{ex.reps_change > 0 ? '+' : ''}{ex.reps_change}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p className="muted" style={{ fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Baseline Weight</p>
+                  <p>{ex.baseline_weight !== null ? `${ex.baseline_weight} lb` : '—'}</p>
+                </div>
+                <div>
+                  <p className="muted" style={{ fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Baseline Reps</p>
+                  <p>{ex.baseline_reps !== null ? ex.baseline_reps : '—'}</p>
+                </div>
+              </div>
+              {ex.recent_workouts && ex.recent_workouts.length > 0 && (
+                <div className="progress-chart">
+                  <TrendChart workouts={ex.recent_workouts} />
+                </div>
+              )}
+              <p className="muted" style={{ marginTop: '0.75rem', fontSize: '0.8rem' }}>
+                Last workout: {fmtDate(ex.last_workout_date)}
+              </p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="card">
+          <p className="muted">No exercise data yet. Log some workouts to see your progress!</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ─── Dashboard ─── */
 function Dashboard({ summary }) {
   if (!summary) return <p className="muted">Loading…</p>
-  const { today, calories_7d, bodycomp_latest, weight_delta, bf_delta, workouts_7d } = summary
+  const { today, calories_7d, bodycomp_latest, weight_delta, bf_delta, workouts_7d, exercise_progress } = summary
   const pct = Math.min(100, Math.round((today.calories / today.calorie_target) * 100))
 
   return (
@@ -82,6 +206,52 @@ function Dashboard({ summary }) {
             )
           })}
         </div>
+      </div>
+
+      <div className="card wide">
+        <h3>Exercise Progress</h3>
+        <p className="muted" style={{ marginBottom: '1rem' }}>Track changes in weights and reps over time</p>
+        {exercise_progress && exercise_progress.length > 0 ? (
+          <div className="exercise-progress-grid">
+            {exercise_progress.map(ex => (
+              <div key={ex.exercise} className="exercise-progress-card">
+                <div className="exercise-header">
+                  <h4>{ex.exercise}</h4>
+                  <span className="muted">{ex.num_sessions} session{ex.num_sessions !== 1 && 's'}</span>
+                </div>
+                <div className="progress-row">
+                  <div className="progress-card">
+                    <div>
+                      <div className="progress-label">Weight</div>
+                      <div className="progress-value">
+                        {ex.current_weight !== null ? `${ex.current_weight} lb` : '—'}
+                        <span className={ex.weight_change > 0 ? 'good' : ex.weight_change < 0 ? 'bad' : ''}>
+                          {ex.weight_change !== null && ex.weight_change !== 0 ? (ex.weight_change > 0 ? '+' : '') + ex.weight_change : ''}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="progress-label">Reps</div>
+                      <div className="progress-value">
+                        {ex.current_reps !== null ? ex.current_reps : '—'}
+                        <span className={ex.reps_change > 0 ? 'good' : ex.reps_change < 0 ? 'bad' : ''}>
+                          {ex.reps_change !== null && ex.reps_change !== 0 ? (ex.reps_change > 0 ? '+' : '') + ex.reps_change : ''}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  {ex.recent_workouts && ex.recent_workouts.length > 1 && (
+                    <div className="trend-visual">
+                      <TrendChart workouts={ex.recent_workouts} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="muted">No exercise data yet. Log some workouts to see progress!</p>
+        )}
       </div>
     </div>
   )
