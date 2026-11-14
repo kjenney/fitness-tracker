@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
-from .views import BodyCompViewSet, ExerciseProgressView, ExerciseViewSet, FoodViewSet, LastWorkoutForExerciseView, SummaryView, WorkoutViewSet
+from .views import AllWorkoutsView, BodyCompViewSet, ExerciseProgressView, ExerciseViewSet, FoodViewSet, LastWorkoutForExerciseView, SummaryView, WorkoutViewSet
 
 router = DefaultRouter()
 router.register("exercises", ExerciseViewSet, basename="exercise")
@@ -13,4 +13,5 @@ urlpatterns = [
     path("summary/", SummaryView.as_view(), name="summary"),
     path("last-workout/", LastWorkoutForExerciseView.as_view(), name="last-workout"),
     path("exercise-progress/", ExerciseProgressView.as_view(), name="exercise-progress"),
+    path("all-workouts/", AllWorkoutsView.as_view(), name="all-workouts"),
 ] + router.urls

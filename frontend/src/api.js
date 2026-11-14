@@ -21,6 +21,7 @@ async function req(path, options = {}) {
 export const api = {
   summary: () => req('/summary/'),
   exerciseProgress: () => req('/exercise-progress/'),
+  allWorkouts: () => req('/all-workouts/'),
   exercises: {
     list: () => req('/exercises/'),
     create: (data) => req('/exercises/', { method: 'POST', body: JSON.stringify(data) }),

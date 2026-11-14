@@ -63,6 +63,24 @@ class LastWorkoutForExerciseView(APIView):
         return Response({})
 
 
+class AllWorkoutsView(APIView):
+    """Get all workouts sorted by date for a consolidated line chart."""
+
+    def get(self, request):
+        workouts = WorkoutSet.objects.order_by('date', 'id')
+        result = []
+
+        for w in workouts:
+            result.append({
+                'date': w.date.isoformat(),
+                'weight': w.weight,
+                'reps': w.reps,
+                'exercise': w.exercise,
+            })
+
+        return Response(result)
+
+
 
 class ExerciseProgressView(APIView):
     """Get historical workout data for exercises - weight, reps over time."""

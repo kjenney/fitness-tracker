@@ -2,6 +2,141 @@ import { useEffect, useState, useCallback } from 'react'
 import { api, todayStr, fmtDate } from './api.js'
 
 
+/* ─── Consolidated Workout Line Chart Component ─── */
+function WorkoutLineChart({ workouts }) {
+  // Sort workouts by date
+  const sortedWorkouts = [...workouts].sort((a, b) => new Date(a.date) - new Date(b.date))
+
+  // Group by exercise and create data series
+  const exercises = {}
+  sortedWorkouts.forEach(w => {
+    if (!exercises[w.exercise]) {
+      exercises[w.exercise] = []
+    }
+    exercises[w.exercise].push(w)
+  })
+
+  // Filter out exercises with only one data point for the chart
+  // (single points can't form a line)
+  const exerciseData = Object.entries(exercises).filter(([_, data]) => data.length >= 2)
+
+  // If no exercises have multiple data points, show a single data point warning
+  if (exerciseData.length === 0) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--muted)' }}>
+        <p>Need at least 2 data points per exercise to show a trend</p>
+      </div>
+    )
+  }
+
+  // Create a unified x-axis based on all data points
+  const allDataPoints = sortedWorkouts.map((w, i) => ({ ...w, index: i }))
+    .filter(w => w.weight !== null || w.reps !== null)
+
+  if (allDataPoints.length < 2) return null
+
+  // Determine which metric to plot (weight preferred if available)
+  const hasWeight = allDataPoints.some(w => w.weight !== null)
+  const metric = hasWeight ? 'weight' : 'reps'
+  const values = allDataPoints.map(w => w[metric] || 0)
+  const minVal = Math.min(...values)
+  const maxVal = Math.max(...values)
+  const range = maxVal - minVal || 1
+
+  // SVG dimensions
+  const width = 800
+  const height = 300
+  const padding = { top: 20, right: 20, bottom: 30, left: 50 }
+  const chartWidth = width - padding.left - padding.right
+  const chartHeight = height - padding.top - padding.bottom
+
+  // Generate points for each exercise
+  const pointsByExercise = exerciseData.map(([exercise, data], idx) => {
+    // Map each data point to its index in allDataPoints
+    const points = data
+      .map(d => {
+        const foundIndex = allDataPoints.findIndex(w => w.exercise === d.exercise && w.date === d.date && (w.weight === d.weight || w.reps === d.reps))
+        return { ...d, chartIndex: foundIndex }
+      })
+      .filter(d => d.chartIndex >= 0)
+      .map((d, i) => {
+        const x = (d.chartIndex / (allDataPoints.length - 1)) * chartWidth + padding.left
+        const y = chartHeight - ((d[metric] - minVal) / range) * chartHeight + padding.top
+        return `${x},${y}`
+      }).join(' ')
+
+    return { exercise, points, color: idx }
+  })
+
+  // Generate x-axis labels
+  const numLabels = Math.min(7, allDataPoints.length)
+  const xLabels = []
+  for (let i = 0; i < numLabels; i++) {
+    const idx = Math.round((i / (numLabels - 1)) * (allDataPoints.length - 1))
+    const date = allDataPoints[idx].date
+    xLabels.push({ idx, date })
+  }
+
+  // Colors for different exercises
+  const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#06b6d4', '#10b981', '#f59e0b', '#3b82f6']
+
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <svg width={width} height={height} className="workout-line-chart" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+        {/* Grid lines */}
+        <line x1={padding.left} y1={padding.top} x2={padding.left} y2={chartHeight + padding.top} stroke="var(--border)" strokeWidth="1" />
+        <line x1={padding.left} y1={chartHeight + padding.top} x2={width - padding.right} y2={chartHeight + padding.top} stroke="var(--border)" strokeWidth="1" />
+
+        {/* Y-axis labels (metric values) */}
+        {[0, 0.25, 0.5, 0.75, 1].map((p, i) => {
+          const val = minVal + p * range
+          const y = chartHeight - p * chartHeight + padding.top
+          return (
+            <text key={i} x={padding.left - 5} y={y + 4} fontSize="10" textAnchor="end" fill="var(--muted)">
+              {Math.round(val)}
+            </text>
+          )
+        })}
+
+        {/* X-axis labels (dates) */}
+        {xLabels.map((label, i) => {
+          const x = (label.idx / (allDataPoints.length - 1)) * chartWidth + padding.left
+          return (
+            <text key={i} x={x} y={height - 5} fontSize="10" textAnchor="middle" fill="var(--muted)">
+              {new Date(label.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </text>
+          )
+        })}
+
+        {/* Data series lines */}
+        {pointsByExercise.map((series, idx) => (
+          <polyline
+            key={series.exercise}
+            fill="none"
+            stroke={colors[idx % colors.length]}
+            strokeWidth="2"
+            points={series.points}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="workout-series"
+          />
+        ))}
+
+        {/* Legend */}
+        <g transform={`translate(${padding.left}, ${padding.top - 10})`}>
+          {pointsByExercise.map((series, idx) => (
+            <g key={series.exercise} transform={`translate(${idx * 120}, 0)`}>
+              <rect x="0" y="-5" width="12" height="12" fill={colors[idx % colors.length]} rx="2" />
+              <text x="16" y="6" fontSize="11" fill="var(--text)">{series.exercise}</text>
+            </g>
+          ))}
+        </g>
+      </svg>
+    </div>
+  )
+}
+
+
 /* ─── Trend Chart Component ─── */
 function TrendChart({ workouts }) {
   // Filter out null values for weight or reps to plot
@@ -46,13 +181,19 @@ function TrendChart({ workouts }) {
 export default function App() {
   const [tab, setTab] = useState('dashboard')
   const [summary, setSummary] = useState(null)
+  const [allWorkouts, setAllWorkouts] = useState([])
   const [error, setError] = useState('')
 
   const refresh = useCallback(() => {
     api.summary().then(setSummary).catch(e => setError(e.message))
   }, [])
 
+  const refreshWorkouts = useCallback(() => {
+    api.allWorkouts().then(setAllWorkouts).catch(() => {})
+  }, [])
+
   useEffect(() => { refresh() }, [refresh])
+  useEffect(() => { refreshWorkouts() }, [refreshWorkouts])
 
   return (
     <div className="app">
@@ -69,7 +210,7 @@ export default function App() {
       </header>
       {error && <div className="error">{error} <button onClick={() => setError('')}>×</button></div>}
       <main>
-        {tab === 'dashboard' && <Dashboard summary={summary} />}
+        {tab === 'dashboard' && <Dashboard summary={summary} allWorkouts={allWorkouts} />}
         {tab === 'workout' && <WorkoutTab onChanged={refresh} />}
         {tab === 'progress' && <ProgressTab />}
         {tab === 'exercises' && <ExerciseTab />}
@@ -162,7 +303,7 @@ function ProgressTab() {
 }
 
 /* ─── Dashboard ─── */
-function Dashboard({ summary }) {
+function Dashboard({ summary, allWorkouts }) {
   if (!summary) return <p className="muted">Loading…</p>
   const { today, calories_7d, bodycomp_latest, weight_delta, bf_delta, workouts_7d, exercise_progress } = summary
   const pct = Math.min(100, Math.round((today.calories / today.calorie_target) * 100))
@@ -209,48 +350,12 @@ function Dashboard({ summary }) {
       </div>
 
       <div className="card wide">
-        <h3>Exercise Progress</h3>
-        <p className="muted" style={{ marginBottom: '1rem' }}>Track changes in weights and reps over time</p>
-        {exercise_progress && exercise_progress.length > 0 ? (
-          <div className="exercise-progress-grid">
-            {exercise_progress.map(ex => (
-              <div key={ex.exercise} className="exercise-progress-card">
-                <div className="exercise-header">
-                  <h4>{ex.exercise}</h4>
-                  <span className="muted">{ex.num_sessions} session{ex.num_sessions !== 1 && 's'}</span>
-                </div>
-                <div className="progress-row">
-                  <div className="progress-card">
-                    <div>
-                      <div className="progress-label">Weight</div>
-                      <div className="progress-value">
-                        {ex.current_weight !== null ? `${ex.current_weight} lb` : '—'}
-                        <span className={ex.weight_change > 0 ? 'good' : ex.weight_change < 0 ? 'bad' : ''}>
-                          {ex.weight_change !== null && ex.weight_change !== 0 ? (ex.weight_change > 0 ? '+' : '') + ex.weight_change : ''}
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="progress-label">Reps</div>
-                      <div className="progress-value">
-                        {ex.current_reps !== null ? ex.current_reps : '—'}
-                        <span className={ex.reps_change > 0 ? 'good' : ex.reps_change < 0 ? 'bad' : ''}>
-                          {ex.reps_change !== null && ex.reps_change !== 0 ? (ex.reps_change > 0 ? '+' : '') + ex.reps_change : ''}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  {ex.recent_workouts && ex.recent_workouts.length > 1 && (
-                    <div className="trend-visual">
-                      <TrendChart workouts={ex.recent_workouts} />
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+        <h3>Workouts Over Time</h3>
+        <p className="muted" style={{ marginBottom: '1rem' }}>Track all exercises by date</p>
+        {allWorkouts && allWorkouts.length > 0 ? (
+          <WorkoutLineChart workouts={allWorkouts} />
         ) : (
-          <p className="muted">No exercise data yet. Log some workouts to see progress!</p>
+          <p className="muted">No workout data yet. Log some workouts to see your progress!</p>
         )}
       </div>
     </div>

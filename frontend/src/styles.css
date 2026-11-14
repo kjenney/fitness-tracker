@@ -177,6 +177,20 @@ body {
   margin: 1rem 0;
 }
 
+/* ─── Workout Line Chart ─── */
+.workout-line-chart {
+  display: block;
+  width: 100%;
+  min-width: 600px;
+  height: 300px;
+}
+.workout-series {
+  transition: opacity 0.2s ease;
+}
+.workout-series:hover {
+  stroke-width: 3;
+}
+
 h2 { font-size: 1.25rem; margin-bottom: 1rem; }
 
 @media (max-width: 640px) {
