@@ -8,7 +8,8 @@ from rest_framework.views import APIView
 
 
 from .models import BodyComp, Exercise, FoodEntry, Routine, RoutineExercise, WorkoutSet
-from .serializers import BodyCompSerializer, ExerciseSerializer, FoodSerializer, RoutineSerializer, RoutineExerciseSerializer, WorkoutSerializer
+from .serializers import BodyCompSerializer, ExerciseSerializer, FoodSerializer, RoutineSerializer, WorkoutSerializer
+from .mets import calculate_calories
 
 class DateFilterMixin:
     """Restrict list results to one day when ?date=YYYY-MM-DD is given."""
@@ -33,6 +34,18 @@ class ExerciseViewSet(viewsets.ModelViewSet):
 class WorkoutViewSet(DateFilterMixin, viewsets.ModelViewSet):
     queryset = WorkoutSet.objects.all()
     serializer_class = WorkoutSerializer
+
+    def perform_create(self, serializer):
+        """Calculate and save calories burned when creating a workout."""
+        workout = serializer.save()
+        if workout.weight:
+            workout.calories_burned = calculate_calories(
+                weight_lb=workout.weight,
+                exercise=workout.exercise,
+                sets=workout.sets,
+                reps=workout.reps
+            )
+            workout.save()
 
 
 class FoodViewSet(DateFilterMixin, viewsets.ModelViewSet):
@@ -76,6 +89,7 @@ class AllWorkoutsView(APIView):
                 'weight': w.weight,
                 'reps': w.reps,
                 'exercise': w.exercise,
+                'calories_burned': w.calories_burned,
             })
 
         return Response(result)
@@ -188,6 +202,15 @@ class AddRoutineToDayView(APIView):
                 sets=routine_ex.sets,
                 notes=routine_ex.notes,
             )
+            # Calculate and save calories if weight is set
+            if workout.weight:
+                workout.calories_burned = calculate_calories(
+                    weight_lb=workout.weight,
+                    exercise=workout.exercise,
+                    sets=workout.sets,
+                    reps=workout.reps
+                )
+                workout.save()
             created_workouts.append({
                 'id': workout.id,
                 'date': workout.date.isoformat(),
@@ -195,6 +218,7 @@ class AddRoutineToDayView(APIView):
                 'weight': workout.weight,
                 'reps': workout.reps,
                 'sets': workout.sets,
+                'calories_burned': workout.calories_burned,
                 'notes': workout.notes,
             })
 
@@ -293,6 +317,24 @@ class SummaryView(APIView):
         volume = week_workouts.aggregate(v=Sum(F("weight") * F("reps") * F("sets")))["v"] or 0
         distinct_days = week_workouts.values("date").distinct().count()
 
+        # Calculate today's workout calories
+        today_workouts = WorkoutSet.objects.filter(date=today)
+        today_calories_burned = sum(w.calories_burned or 0 for w in today_workouts)
+
+        # Calculate 7-day workout calorie trend
+        week_calories_burned = []
+        for i in range(7):
+            d = week_ago + timedelta(days=i)
+            day_workouts = week_workouts.filter(date=d)
+            day_calories = sum(w.calories_burned or 0 for w in day_workouts)
+            week_calories_burned.append(
+                {
+                    "date": d.isoformat(),
+                    "label": d.strftime("%a"),
+                    "calories_burned": round(day_calories),
+                }
+            )
+
         return Response(
             {
                 "today": {
@@ -300,8 +342,10 @@ class SummaryView(APIView):
                     "protein_g": round(FoodEntry.objects.filter(date=today).aggregate(p=Sum("protein_g"))["p"] or 0, 1),
                     "calorie_target": settings.CALORIE_TARGET,
                     "protein_target": settings.PROTEIN_TARGET,
+                    "workout_calories": round(today_calories_burned),
                 },
                 "calories_7d": calories_7d,
+                "workout_calories_7d": week_calories_burned,
                 "bodycomp_latest": BodyCompSerializer(latest).data if latest else None,
                 "bodycomp_baseline": BodyCompSerializer(baseline).data if baseline else None,
                 "weight_delta": weight_delta,

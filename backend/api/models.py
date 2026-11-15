@@ -1,6 +1,13 @@
 from django.db import models
 
 
+# Import MET calculation - placed after model definitions to avoid circular import
+def _calculate_workout_calories(weight, exercise, sets, reps=None):
+    """Calculate calories burned for a workout set."""
+    from .mets import calculate_calories
+    return calculate_calories(weight, exercise, sets, reps)
+
+
 class WorkoutSet(models.Model):
     """One logged exercise: type, weight, reps (plus optional sets/notes)."""
 
@@ -9,6 +16,7 @@ class WorkoutSet(models.Model):
     weight = models.FloatField(null=True, blank=True, help_text="lb (blank = bodyweight)")
     reps = models.IntegerField(null=True, blank=True)
     sets = models.IntegerField(default=1)
+    calories_burned = models.FloatField(null=True, blank=True, help_text="Calories burned during this set")
     notes = models.CharField(max_length=300, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -19,6 +27,18 @@ class WorkoutSet(models.Model):
         w = f" {self.weight:g} lb" if self.weight else ""
         r = f" x {self.reps}" if self.reps else ""
         return f"{self.date} {self.exercise}{w}{r}"
+
+    def save(self, *args, **kwargs):
+        """Override save to automatically calculate calories_burned if weight is set."""
+        # Only calculate if we have weight and no calories_burned is set
+        if self.weight and self.calories_burned is None:
+            self.calories_burned = _calculate_workout_calories(
+                weight=self.weight,
+                exercise=self.exercise,
+                sets=self.sets,
+                reps=self.reps
+            )
+        super().save(*args, **kwargs)
 
 
 class Exercise(models.Model):

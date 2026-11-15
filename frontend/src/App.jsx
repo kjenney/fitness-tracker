@@ -307,8 +307,9 @@ function ProgressTab() {
 /* ─── Dashboard ─── */
 function Dashboard({ summary, allWorkouts }) {
   if (!summary) return <p className="muted">Loading…</p>
-  const { today, calories_7d, bodycomp_latest, weight_delta, bf_delta, workouts_7d, exercise_progress } = summary
+  const { today, calories_7d, workout_calories_7d, bodycomp_latest, weight_delta, bf_delta, workouts_7d, exercise_progress } = summary
   const pct = Math.min(100, Math.round((today.calories / today.calorie_target) * 100))
+  const workoutCalsToday = today.workout_calories || 0
 
   return (
     <div className="grid">
@@ -317,6 +318,12 @@ function Dashboard({ summary, allWorkouts }) {
         <div className="big">{today.calories.toLocaleString()} <span className="unit">/ {today.calorie_target.toLocaleString()} kcal</span></div>
         <div className="progress-bar"><div className="progress-fill" style={{ width: pct + '%' }} /></div>
         <p className="muted">{pct}% of target · {today.protein_g}g protein (target {today.protein_target}g)</p>
+      </div>
+
+      <div className="card">
+        <h3>Workout Calories</h3>
+        <div className="big">{workoutCalsToday.toLocaleString()} <span className="unit">kcal</span></div>
+        <p className="muted">Calories burned from exercise</p>
       </div>
 
       <div className="card">
@@ -337,18 +344,27 @@ function Dashboard({ summary, allWorkouts }) {
       </div>
 
       <div className="card wide">
-        <h3>7-Day Calorie Trend</h3>
-        <div className="bar-chart">
-          {calories_7d.map(d => {
-            const h = Math.max(4, Math.min(100, (d.calories / (summary.today.calorie_target * 1.2)) * 100))
+        <h3>7-Day Calories</h3>
+        <p className="muted" style={{ marginBottom: '0.5rem' }}>Food intake (top) + Workout burn (bottom)</p>
+        <div className="bar-chart" style={{ height: '140px' }}>
+          {calories_7d.map((d, i) => {
+            const intakeH = Math.max(4, Math.min(100, (d.calories / (summary.today.calorie_target * 1.2)) * 100))
+            const workoutCals = workout_calories_7d?.[i]?.calories_burned || 0
+            const burnH = Math.max(4, Math.min(50, (workoutCals / 500) * 100)) // Scale to 500 max
             return (
-              <div key={d.date} className="bar-col" title={`${d.date}: ${d.calories} kcal`}>
-                <div className="bar" style={{ height: h + '%' }} />
+              <div key={d.date} className="bar-col" style={{ height: '100%', justifyContent: 'flex-end' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <div className="bar" title={`${d.date}: ${d.calories} kcal food`} style={{ height: intakeH + '%' }} />
+                  <div className="bar" title={`${d.date}: ${workoutCals} kcal burned`} style={{ height: burnH + '%', background: '#34d399' }} />
+                </div>
                 <span>{d.label}</span>
               </div>
             )
           })}
         </div>
+        <p className="muted" style={{ marginTop: '0.5rem', fontSize: '0.75rem' }}>
+          <span style={{ color: '#6366f1' }}>Blue: Food</span> · <span style={{ color: '#34d399' }}>Green: Workout burn</span>
+        </p>
       </div>
 
       <div className="card wide">
@@ -461,9 +477,19 @@ function WorkoutTab({ onChanged }) {
         <p className="muted" style={{ marginBottom: '1rem' }}>Sets can only be logged for today — this day is shown as recorded.</p>
       )}
 
+      {/* Daily workout calories total */}
+      {entries.length > 0 && (
+        <div className="card" style={{ marginBottom: '1rem' }}>
+          <p className="muted" style={{ marginBottom: '0.25rem' }}>Total Calories Burned</p>
+          <div className="big" style={{ fontSize: '1.4rem' }}>
+            {entries.reduce((sum, en) => sum + (en.calories_burned || 0), 0).toLocaleString()} <span className="unit">kcal</span>
+          </div>
+        </div>
+      )}
+
       <h3 className="section-title">Logs for {fmtDate(viewDate)}</h3>
       <table className="table">
-        <thead><tr><th>Exercise</th><th>Weight</th><th>Reps</th><th>Sets</th><th>Notes</th><th></th></tr></thead>
+        <thead><tr><th>Exercise</th><th>Weight</th><th>Reps</th><th>Sets</th><th>Calories</th><th>Notes</th><th></th></tr></thead>
         <tbody>
           {entries.map(en => (
             <tr key={en.id}>
@@ -471,11 +497,12 @@ function WorkoutTab({ onChanged }) {
               <td>{en.weight ? `${en.weight} lb` : 'BW'}</td>
               <td>{en.reps ?? '—'}</td>
               <td>{en.sets}</td>
+              <td>{en.calories_burned ? Math.round(en.calories_burned).toLocaleString() : '—'}</td>
               <td>{en.notes}</td>
               <td><button className="btn-sm" onClick={() => remove(en.id)}>×</button></td>
             </tr>
           ))}
-          {entries.length === 0 && <tr><td colSpan="6" className="muted">No entries for this date</td></tr>}
+          {entries.length === 0 && <tr><td colSpan="7" className="muted">No entries for this date</td></tr>}
         </tbody>
       </table>
 
