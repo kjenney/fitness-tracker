@@ -5,6 +5,7 @@ from .views import (
     AddRoutineToDayView,
     AllWorkoutsView,
     BodyCompViewSet,
+    CreateRoutineFromWorkoutView,
     ExerciseProgressView,
     ExerciseViewSet,
     FoodViewSet,
@@ -27,4 +28,5 @@ urlpatterns = [
     path("exercise-progress/", ExerciseProgressView.as_view(), name="exercise-progress"),
     path("all-workouts/", AllWorkoutsView.as_view(), name="all-workouts"),
     path("routines/<int:pk>/add-to-day/", AddRoutineToDayView.as_view(), name="routine-add-to-day"),
+    path("routines/from-workout/", CreateRoutineFromWorkoutView.as_view(), name="routine-from-workout"),
 ] + router.urls

@@ -50,6 +50,7 @@ export const api = {
     update: (id, data) => req(`/routines/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }),
     remove: (id) => req(`/routines/${id}/`, { method: 'DELETE' }),
     addToDay: (id, date) => req(`/routines/${id}/add-to-day/`, { method: 'POST', body: JSON.stringify({ date }) }),
+    createFromWorkout: (data) => req('/routines/from-workout/', { method: 'POST', body: JSON.stringify(data) }),
   },
 }
 

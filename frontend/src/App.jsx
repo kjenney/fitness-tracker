@@ -370,6 +370,8 @@ function WorkoutTab({ onChanged }) {
   const [entries, setEntries] = useState([])
   const [viewDate, setViewDate] = useState(todayStr())
   const [form, setForm] = useState({ exercise: '', weight: '', reps: '', sets: '1', notes: '' })
+  const [showCreateRoutineModal, setShowCreateRoutineModal] = useState(false)
+  const [routineName, setRoutineName] = useState('')
 
   const isToday = viewDate === todayStr()
 
@@ -418,11 +420,26 @@ function WorkoutTab({ onChanged }) {
 
   const remove = (id) => { api.workouts.remove(id).then(() => { loadEntries(); onChanged() }) }
 
+  const createRoutineFromWorkout = () => {
+    const name = routineName.trim() || `Routine - ${viewDate}`
+    api.routines.createFromWorkout({ date: viewDate, name: name }).then(() => {
+      setRoutineName('')
+      setShowCreateRoutineModal(false)
+      onChanged()
+      alert(`Created routine "${name}" from workouts on ${fmtDate(viewDate)}`)
+    }).catch(err => {
+      alert('Error: ' + err.message)
+    })
+  }
+
   return (
     <div>
       <div className="form">
         <span className="muted">View day</span>
         <input type="date" value={viewDate} max={todayStr()} onChange={e => e.target.value && setViewDate(e.target.value)} />
+        {entries.length > 0 && (
+          <button onClick={() => setShowCreateRoutineModal(true)}>Create Routine</button>
+        )}
       </div>
 
       {isToday ? (
@@ -461,6 +478,38 @@ function WorkoutTab({ onChanged }) {
           {entries.length === 0 && <tr><td colSpan="6" className="muted">No entries for this date</td></tr>}
         </tbody>
       </table>
+
+      {/* Create Routine Modal */}
+      {showCreateRoutineModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+        }}>
+          <div style={{
+            background: 'var(--surface)', padding: '1.5rem', borderRadius: '8px',
+            width: '90%', maxWidth: '400px', maxHeight: '90vh', overflow: 'auto'
+          }}>
+            <h2>Create Routine</h2>
+            <p className="muted" style={{ marginBottom: '1rem' }}>
+              Create a routine from the {entries.length} exercise{entries.length !== 1 && 's'} logged on {fmtDate(viewDate)}.
+            </p>
+            <form className="form" onSubmit={createRoutineFromWorkout}>
+              <input
+                type="text"
+                placeholder="Routine name"
+                value={routineName}
+                onChange={e => setRoutineName(e.target.value)}
+                required
+                style={{ width: '100%', marginBottom: '1rem' }}
+              />
+              <div className="form" style={{ justifyContent: 'flex-end', gap: '0.5rem' }}>
+                <button type="button" onClick={() => setShowCreateRoutineModal(false)}>Cancel</button>
+                <button type="submit">Create Routine</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

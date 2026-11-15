@@ -204,6 +204,53 @@ class AddRoutineToDayView(APIView):
         })
 
 
+class CreateRoutineFromWorkoutView(APIView):
+    """Create a routine from all exercises in a workout on a specific day."""
+
+    def post(self, request):
+        workout_date = request.data.get('date')
+        routine_name = request.data.get('name')
+
+        if not workout_date:
+            return Response({'error': 'date is required'}, status=400)
+
+        if not routine_name:
+            return Response({'error': 'routine name is required'}, status=400)
+
+        try:
+            day = date.fromisoformat(workout_date)
+        except ValueError:
+            return Response({'error': 'invalid date format, use YYYY-MM-DD'}, status=400)
+
+        # Get all workout sets for the specified date
+        workouts = WorkoutSet.objects.filter(date=day)
+        if not workouts.exists():
+            return Response({'error': 'no workouts found for this date'}, status=404)
+
+        # Create the routine
+        routine = Routine.objects.create(name=routine_name.strip())
+
+        # Add each workout as a routine exercise
+        for workout in workouts:
+            # Get or create the exercise
+            exercise_obj, _ = Exercise.objects.get_or_create(name=workout.exercise)
+
+            RoutineExercise.objects.create(
+                routine=routine,
+                exercise=exercise_obj,
+                weight=workout.weight,
+                reps=workout.reps,
+                sets=workout.sets,
+                notes=workout.notes,
+            )
+
+        return Response({
+            'message': f'Created routine "{routine.name}" with {routine.exercises.count()} exercises',
+            'routine_id': routine.id,
+            'routine_name': routine.name,
+        })
+
+
 class SummaryView(APIView):
     """Dashboard aggregates: today's food, 7-day calorie trend,
     latest vs baseline body comp, and 7-day training volume."""
