@@ -202,6 +202,7 @@ export default function App() {
         <nav className="tabs">
           <button className={tab === 'dashboard' ? 'active' : ''} onClick={() => setTab('dashboard')}>Dashboard</button>
           <button className={tab === 'workout' ? 'active' : ''} onClick={() => setTab('workout')}>Workout</button>
+          <button className={tab === 'routine' ? 'active' : ''} onClick={() => setTab('routine')}>Routine</button>
           <button className={tab === 'progress' ? 'active' : ''} onClick={() => setTab('progress')}>Progress</button>
           <button className={tab === 'exercises' ? 'active' : ''} onClick={() => setTab('exercises')}>Exercises</button>
           <button className={tab === 'food' ? 'active' : ''} onClick={() => setTab('food')}>Food</button>
@@ -212,6 +213,7 @@ export default function App() {
       <main>
         {tab === 'dashboard' && <Dashboard summary={summary} allWorkouts={allWorkouts} />}
         {tab === 'workout' && <WorkoutTab onChanged={refresh} />}
+        {tab === 'routine' && <RoutineTab />}
         {tab === 'progress' && <ProgressTab />}
         {tab === 'exercises' && <ExerciseTab />}
         {tab === 'food' && <FoodTab summary={summary} onChanged={refresh} />}
@@ -792,4 +794,398 @@ function BodyCompTab() {
       </table>
     </div>
   )
+}
+
+/* ─── Routine Tab ─── */
+function RoutineTab() {
+  const [routines, setRoutines] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [form, setForm] = useState({ name: '', exercises: [{ exercise: '', weight: '', reps: '', sets: '1', notes: '' }] })
+  const [editing, setEditing] = useState(null)
+  const [editName, setEditName] = useState('')
+  const [editExercises, setEditExercises] = useState([])
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+
+  useEffect(() => {
+    loadRoutines()
+  }, [])
+
+  const loadRoutines = () => {
+    api.routines.list().then(data => {
+      setRoutines(data)
+      setLoading(false)
+    }).catch(() => {
+      setLoading(false)
+    })
+  }
+
+  const addExerciseRow = () => {
+    setForm({ ...form, exercises: [...form.exercises, { exercise: '', weight: '', reps: '', sets: '1', notes: '' }] })
+  }
+
+  const removeExerciseRow = (index) => {
+    const newExercises = [...form.exercises]
+    newExercises.splice(index, 1)
+    setForm({ ...form, exercises: newExercises })
+  }
+
+  const handleExerciseChange = (index, value) => {
+    const newExercises = [...form.exercises]
+    newExercises[index].exercise = value
+    setForm({ ...form, exercises: newExercises })
+  }
+
+  const handleWeightChange = (index, value) => {
+    const newExercises = [...form.exercises]
+    newExercises[index].weight = value
+    setForm({ ...form, exercises: newExercises })
+  }
+
+  const handleRepsChange = (index, value) => {
+    const newExercises = [...form.exercises]
+    newExercises[index].reps = value
+    setForm({ ...form, exercises: newExercises })
+  }
+
+  const handleSetsChange = (index, value) => {
+    const newExercises = [...form.exercises]
+    newExercises[index].sets = value
+    setForm({ ...form, exercises: newExercises })
+  }
+
+  const handleNotesChange = (index, value) => {
+    const newExercises = [...form.exercises]
+    newExercises[index].notes = value
+    setForm({ ...form, exercises: newExercises })
+  }
+
+  const handleAddSubmit = (e) => {
+    e.preventDefault()
+    const trimmedName = form.name.trim()
+    if (!trimmedName) return
+
+    const exercisesData = form.exercises
+      .filter(ex => ex.exercise.trim())
+      .map(ex => ({
+        exercise: ex.exercise,
+        weight: ex.weight ? +ex.weight : null,
+        reps: ex.reps ? +ex.reps : null,
+        sets: ex.sets ? +ex.sets : 1,
+        notes: ex.notes.trim(),
+      }))
+
+    if (exercisesData.length === 0) {
+      alert('Please add at least one exercise')
+      return
+    }
+
+    api.routines.create({ name: trimmedName, exercises_write: exercisesData }).then(() => {
+      setForm({ name: '', exercises: [{ exercise: '', weight: '', reps: '', sets: '1', notes: '' }] })
+      setShowAddModal(false)
+      loadRoutines()
+    })
+  }
+
+  const handleEditSubmit = (id) => {
+    const trimmedName = editName.trim()
+    if (!trimmedName) return
+
+    const exercisesData = editExercises
+      .filter(ex => ex.exercise.trim())
+      .map(ex => ({
+        exercise: ex.exercise,
+        weight: ex.weight ? +ex.weight : null,
+        reps: ex.reps ? +ex.reps : null,
+        sets: ex.sets ? +ex.sets : 1,
+        notes: ex.notes.trim(),
+      }))
+
+    if (exercisesData.length === 0) {
+      alert('Please add at least one exercise')
+      return
+    }
+
+    api.routines.update(id, { name: trimmedName, exercises_write: exercisesData }).then(() => {
+      setEditing(null)
+      setEditName('')
+      setEditExercises([])
+      setShowEditModal(false)
+      loadRoutines()
+    })
+  }
+
+  const removeRoutine = (id) => {
+    if (confirm('Are you sure you want to delete this routine?')) {
+      api.routines.remove(id).then(loadRoutines)
+    }
+  }
+
+  const addToDay = (routine) => {
+    const date = prompt('Enter date to add routine (YYYY-MM-DD):', todayStr())
+    if (date) {
+      api.routines.addToDay(routine.id, date).then(() => {
+        loadRoutines()
+      }).catch(err => {
+        alert('Error: ' + err.message)
+      })
+    }
+  }
+
+  return (
+    <div>
+      <div className="form">
+        <button onClick={() => setShowAddModal(true)}>+ Create Routine</button>
+      </div>
+
+      {loading ? (
+        <p className="muted">Loading routines…</p>
+      ) : routines.length === 0 ? (
+        <div className="card">
+          <p className="muted">No routines yet. Create one to get started!</p>
+        </div>
+      ) : (
+        <div className="grid">
+          {routines.map(routine => (
+            <div key={routine.id} className="card">
+              <div className="exercise-header">
+                <h3>{routine.name}</h3>
+                <span className="muted">{routine.exercises?.length || 0} exercise{routine.exercises?.length !== 1 && 's'}</span>
+              </div>
+              {routine.exercises && routine.exercises.length > 0 && (
+                <ul style={{ marginBottom: '1rem' }}>
+                  {routine.exercises.map(ex => (
+                    <li key={ex.id} style={{ marginBottom: '0.25rem' }}>
+                      {ex.exercise_name || ex.exercise}
+                      {ex.weight ? ` (${ex.weight} lb)` : ''}
+                      {ex.reps ? ` x ${ex.reps}` : ''}
+                      {ex.sets ? ` x ${ex.sets} sets` : ''}
+                      {ex.notes ? <span className="muted"> - {ex.notes}</span> : ''}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="form">
+                <button onClick={() => addToDay(routine)}>Add to Day</button>
+                <button className="neutral" onClick={() => {
+                  setEditing(routine)
+                  setEditName(routine.name)
+                  setEditExercises(routine.exercises || [])
+                  setShowEditModal(true)
+                }}>Edit</button>
+                <button className="bad" onClick={() => removeRoutine(routine.id)}>Delete</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add Routine Modal */}
+      {showAddModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+        }}>
+          <div style={{
+            background: 'var(--surface)', padding: '1.5rem', borderRadius: '8px',
+            width: '90%', maxWidth: '500px', maxHeight: '90vh', overflow: 'auto'
+          }}>
+            <h2>Create Routine</h2>
+            <form className="form" onSubmit={handleAddSubmit}>
+              <input
+                type="text"
+                placeholder="Routine name"
+                value={form.name}
+                onChange={e => setForm({ ...form, name: e.target.value })}
+                required
+                style={{ width: '100%', marginBottom: '1rem' }}
+              />
+              <div style={{ marginBottom: '1rem' }}>
+                <h4>Exercises</h4>
+                {form.exercises.map((ex, index) => (
+                  <div key={index} style={{ border: '1px solid var(--border)', borderRadius: '6px', padding: '0.75rem', marginBottom: '0.5rem' }}>
+                    <select
+                      value={ex.exercise}
+                      onChange={e => handleExerciseChange(index, e.target.value)}
+                      required
+                      style={{ width: '100%', marginBottom: '0.5rem' }}
+                    >
+                      <option value="">Select exercise…</option>
+                      <ExerciseOptions />
+                    </select>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <input
+                        type="number"
+                        placeholder="Weight (lb)"
+                        min="0"
+                        step="5"
+                        value={ex.weight}
+                        onChange={e => handleWeightChange(index, e.target.value)}
+                        style={{ width: '100px' }}
+                      />
+                      <input
+                        type="number"
+                        placeholder="Reps"
+                        min="0"
+                        value={ex.reps}
+                        onChange={e => handleRepsChange(index, e.target.value)}
+                        style={{ width: '80px' }}
+                      />
+                      <input
+                        type="number"
+                        placeholder="Sets"
+                        min="1"
+                        value={ex.sets}
+                        onChange={e => handleSetsChange(index, e.target.value)}
+                        style={{ width: '80px' }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Notes"
+                        value={ex.notes}
+                        onChange={e => handleNotesChange(index, e.target.value)}
+                        style={{ flex: 1 }}
+                      />
+                      {form.exercises.length > 1 && (
+                        <button type="button" className="bad" onClick={() => removeExerciseRow(index)}>×</button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                <button type="button" onClick={addExerciseRow}>+ Add Exercise</button>
+              </div>
+              <div className="form">
+                <button type="submit">Create Routine</button>
+                <button type="button" onClick={() => setShowAddModal(false)}>Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Routine Modal */}
+      {showEditModal && editing && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+        }}>
+          <div style={{
+            background: 'var(--surface)', padding: '1.5rem', borderRadius: '8px',
+            width: '90%', maxWidth: '500px', maxHeight: '90vh', overflow: 'auto'
+          }}>
+            <h2>Edit Routine</h2>
+            <form className="form" onSubmit={() => handleEditSubmit(editing.id)}>
+              <input
+                type="text"
+                placeholder="Routine name"
+                value={editName}
+                onChange={e => setEditName(e.target.value)}
+                required
+                style={{ width: '100%', marginBottom: '1rem' }}
+              />
+              <div style={{ marginBottom: '1rem' }}>
+                <h4>Exercises</h4>
+                {editExercises.map((ex, index) => (
+                  <div key={ex.id || index} style={{ border: '1px solid var(--border)', borderRadius: '6px', padding: '0.75rem', marginBottom: '0.5rem' }}>
+                    <select
+                      value={ex.exercise_name || ex.exercise || ''}
+                      onChange={e => {
+                        const newExercises = [...editExercises]
+                        newExercises[index].exercise = e.target.value
+                        setEditExercises(newExercises)
+                      }}
+                      required
+                      style={{ width: '100%', marginBottom: '0.5rem' }}
+                    >
+                      <option value="">Select exercise…</option>
+                      <ExerciseOptions />
+                    </select>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <input
+                        type="number"
+                        placeholder="Weight (lb)"
+                        min="0"
+                        step="5"
+                        value={ex.weight || ''}
+                        onChange={e => {
+                          const newExercises = [...editExercises]
+                          newExercises[index].weight = e.target.value
+                          setEditExercises(newExercises)
+                        }}
+                        style={{ width: '100px' }}
+                      />
+                      <input
+                        type="number"
+                        placeholder="Reps"
+                        min="0"
+                        value={ex.reps || ''}
+                        onChange={e => {
+                          const newExercises = [...editExercises]
+                          newExercises[index].reps = e.target.value
+                          setEditExercises(newExercises)
+                        }}
+                        style={{ width: '80px' }}
+                      />
+                      <input
+                        type="number"
+                        placeholder="Sets"
+                        min="1"
+                        value={ex.sets || ''}
+                        onChange={e => {
+                          const newExercises = [...editExercises]
+                          newExercises[index].sets = e.target.value
+                          setEditExercises(newExercises)
+                        }}
+                        style={{ width: '80px' }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Notes"
+                        value={ex.notes || ''}
+                        onChange={e => {
+                          const newExercises = [...editExercises]
+                          newExercises[index].notes = e.target.value
+                          setEditExercises(newExercises)
+                        }}
+                        style={{ flex: 1 }}
+                      />
+                      {editExercises.length > 1 && (
+                        <button type="button" className="bad" onClick={() => {
+                          const newExercises = [...editExercises]
+                          newExercises.splice(index, 1)
+                          setEditExercises(newExercises)
+                        }}>×</button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                <button type="button" onClick={() => setEditExercises([...editExercises, { exercise: '', weight: '', reps: '', sets: '1', notes: '' }])}>+ Add Exercise</button>
+              </div>
+              <div className="form">
+                <button type="submit">Save Changes</button>
+                <button type="button" onClick={() => setShowEditModal(false)}>Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ExerciseOptions() {
+  const [exercises, setExercises] = useState([])
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    api.exercises.list().then(setExercises).catch(() => {
+      setError('Failed to load exercises')
+    })
+  }, [])
+
+  if (error) return <option value="">{error}</option>
+
+  return exercises.map(ex => (
+    <option key={ex.id} value={ex.name}>{ex.name}</option>
+  ))
 }

@@ -7,8 +7,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 
-from .models import BodyComp, Exercise, FoodEntry, WorkoutSet
-from .serializers import BodyCompSerializer, ExerciseSerializer, FoodSerializer, WorkoutSerializer
+from .models import BodyComp, Exercise, FoodEntry, Routine, RoutineExercise, WorkoutSet
+from .serializers import BodyCompSerializer, ExerciseSerializer, FoodSerializer, RoutineSerializer, RoutineExerciseSerializer, WorkoutSerializer
 
 class DateFilterMixin:
     """Restrict list results to one day when ?date=YYYY-MM-DD is given."""
@@ -148,6 +148,60 @@ class ExerciseProgressView(APIView):
         ), reverse=True)
 
         return Response(result)
+
+
+class RoutineViewSet(viewsets.ModelViewSet):
+    queryset = Routine.objects.all()
+    serializer_class = RoutineSerializer
+
+
+class AddRoutineToDayView(APIView):
+    """Add all exercises from a routine to a specific day as WorkoutSet entries."""
+
+    def post(self, request):
+        routine_id = request.data.get('routine_id')
+        date_str = request.data.get('date')
+
+        if not routine_id:
+            return Response({'error': 'routine_id is required'}, status=400)
+
+        if not date_str:
+            return Response({'error': 'date is required'}, status=400)
+
+        try:
+            day = date.fromisoformat(date_str)
+        except ValueError:
+            return Response({'error': 'invalid date format, use YYYY-MM-DD'}, status=400)
+
+        try:
+            routine = Routine.objects.get(id=routine_id)
+        except Routine.DoesNotExist:
+            return Response({'error': 'routine not found'}, status=404)
+
+        created_workouts = []
+        for routine_ex in routine.exercises.all():
+            workout = WorkoutSet.objects.create(
+                date=day,
+                exercise=routine_ex.exercise.name,
+                weight=routine_ex.weight,
+                reps=routine_ex.reps,
+                sets=routine_ex.sets,
+                notes=routine_ex.notes,
+            )
+            created_workouts.append({
+                'id': workout.id,
+                'date': workout.date.isoformat(),
+                'exercise': workout.exercise,
+                'weight': workout.weight,
+                'reps': workout.reps,
+                'sets': workout.sets,
+                'notes': workout.notes,
+            })
+
+        return Response({
+            'message': f'Added {len(created_workouts)} exercises to {day}',
+            'workouts': created_workouts,
+        })
 
 
 class SummaryView(APIView):

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import BodyComp, Exercise, FoodEntry, WorkoutSet
+from .models import BodyComp, Exercise, FoodEntry, Routine, RoutineExercise, WorkoutSet
 
 
 class ExerciseSerializer(serializers.ModelSerializer):
@@ -35,3 +35,38 @@ class BodyCompSerializer(serializers.ModelSerializer):
             "notes", "created_at"
         ]
         read_only_fields = ["id", "created_at"]
+
+
+class RoutineExerciseSerializer(serializers.ModelSerializer):
+    exercise_name = serializers.CharField(source='exercise.name', read_only=True)
+
+    class Meta:
+        model = RoutineExercise
+        fields = ["id", "exercise", "exercise_name", "weight", "reps", "sets", "notes"]
+
+
+class RoutineSerializer(serializers.ModelSerializer):
+    exercises = RoutineExerciseSerializer(many=True, read_only=True)
+    exercises_write = RoutineExerciseSerializer(many=True, write_only=True, required=False)
+
+    class Meta:
+        model = Routine
+        fields = ["id", "name", "created_at", "exercises", "exercises_write"]
+        read_only_fields = ["id", "created_at", "exercises"]
+
+    def create(self, validated_data):
+        exercises_data = validated_data.pop("exercises_write", [])
+        routine = Routine.objects.create(**validated_data)
+        for exercise_data in exercises_data:
+            RoutineExercise.objects.create(routine=routine, **exercise_data)
+        return routine
+
+    def update(self, instance, validated_data):
+        exercises_data = validated_data.pop("exercises_write", None)
+        instance.name = validated_data.get("name", instance.name)
+        instance.save()
+        if exercises_data is not None:
+            instance.exercises.all().delete()
+            for exercise_data in exercises_data:
+                RoutineExercise.objects.create(routine=instance, **exercise_data)
+        return instance

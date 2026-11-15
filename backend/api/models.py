@@ -90,3 +90,35 @@ class BodyComp(models.Model):
     def __str__(self):
         bf = f" / {self.body_fat_pct:g}% BF" if self.body_fat_pct is not None else ""
         return f"{self.date} {self.weight_lb:g} lb{bf}"
+
+
+class Routine(models.Model):
+    """A reusable workout routine - a collection of exercises to be logged together."""
+
+    name = models.CharField(max_length=200, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class RoutineExercise(models.Model):
+    """An exercise within a routine, with default values."""
+
+    routine = models.ForeignKey(Routine, on_delete=models.CASCADE, related_name="exercises")
+    exercise = models.ForeignKey(Exercise, on_delete=models.PROTECT, help_text="The exercise to perform")
+    weight = models.FloatField(null=True, blank=True, help_text="Default weight (lb, blank = bodyweight)")
+    reps = models.IntegerField(null=True, blank=True)
+    sets = models.IntegerField(default=1)
+    notes = models.CharField(max_length=300, blank=True, default="")
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self):
+        w = f" {self.weight:g} lb" if self.weight else ""
+        r = f" x {self.reps}" if self.reps else ""
+        return f"{self.routine.name}: {self.exercise.name}{w}{r}"
