@@ -27,7 +27,7 @@ export default function App() {
       {error && <div className="error">{error} <button onClick={() => setError('')}>×</button></div>}
       <main>
         {tab === 'dashboard' && <Dashboard summary={summary} />}
-        {tab === 'workout' && <WorkoutTab onChanged={refresh} />}
+        {tab === 'workout' && <WorkoutTab onChanged={refresh} setTab={setTab} />}
         {tab === 'food' && <FoodTab summary={summary} onChanged={refresh} />}
         {tab === 'bodycomp' && <BodyCompTab />}
         {tab === 'routines' && <RoutinesTab />}
@@ -87,7 +87,7 @@ function Dashboard({ summary }) {
 }
 
 /* ─── Workout Tab ─── */
-function WorkoutTab({ onChanged }) {
+function WorkoutTab({ onChanged, setTab }) {
   const [exercises, setExercises] = useState([])
   const [entries, setEntries] = useState([])
   const [form, setForm] = useState({ date: todayStr(), exercise: '', weight: '', reps: '', sets: '1', notes: '' })
@@ -154,11 +154,34 @@ function WorkoutTab({ onChanged }) {
     api.workouts.remove(id).then(() => { loadEntries(); onChanged() })
   }
 
+  const [routineModalOpen, setRoutineModalOpen] = useState(false)
+  const [routineName, setRoutineName] = useState('')
+
+  const handleCreateRoutine = () => {
+    setRoutineName(form.date + ' Workout')
+    setRoutineModalOpen(true)
+  }
+
+  const confirmCreateRoutine = () => {
+    if (!routineName.trim()) return
+    api.workoutsToRoutine({ name: routineName, date: form.date }).then(routine => {
+      setRoutineModalOpen(false)
+      setRoutineName('')
+      // Switch to routines tab
+      setTab('routines')
+    }).catch(e => {
+      alert('Failed to create routine: ' + e.message)
+    })
+  }
+
   return (
     <div>
       <h2>Log a Set</h2>
       <form className="form" onSubmit={submit}>
-        <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
+        <div className="workout-date-row">
+          <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
+          <button type="button" onClick={handleCreateRoutine}>Create Routine</button>
+        </div>
         <select value={form.exercise} onChange={e => setForm({ ...form, exercise: e.target.value })} required>
           <option value="">Select exercise…</option>
           {exercises.map(ex => <option key={ex.id} value={ex.name}>{ex.name}</option>)}
@@ -169,6 +192,24 @@ function WorkoutTab({ onChanged }) {
         <input type="text" placeholder="Notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
         <button type="submit">Add</button>
       </form>
+
+      {routineModalOpen && (
+        <div className="modal">
+          <h3>Create Routine</h3>
+          <p>Turn today's workout into a reusable routine.</p>
+          <input
+            type="text"
+            placeholder="Routine name"
+            value={routineName}
+            onChange={e => setRoutineName(e.target.value)}
+            autoFocus
+          />
+          <div className="modal-actions">
+            <button onClick={confirmCreateRoutine}>Create</button>
+            <button onClick={() => setRoutineModalOpen(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
 
       <h3 className="section-title">Logs for {fmtDate(form.date)}</h3>
       <table className="table">

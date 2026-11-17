@@ -42,6 +42,7 @@ export const api = {
     update: (id, data) => req(`/routines/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }),
     remove: (id) => req(`/routines/${id}/`, { method: 'DELETE' }),
   },
+  workoutsToRoutine: (data) => req('/workouts/to-routine/', { method: 'POST', body: JSON.stringify(data) }),
 }
 
 export const todayStr = () => new Date().toISOString().slice(0, 10)

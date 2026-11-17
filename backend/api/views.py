@@ -6,7 +6,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import BodyComp, Exercise, FoodEntry, Routine, WorkoutSet
+from .models import BodyComp, Exercise, FoodEntry, Routine, RoutineExercise, WorkoutSet
 from .serializers import BodyCompSerializer, ExerciseSerializer, FoodSerializer, RoutineSerializer, WorkoutSerializer
 
 
@@ -33,6 +33,52 @@ class BodyCompViewSet(viewsets.ModelViewSet):
 class RoutineViewSet(viewsets.ModelViewSet):
     queryset = Routine.objects.all()
     serializer_class = RoutineSerializer
+
+
+class WorkoutToRoutineView(APIView):
+    """Create a Routine from workout entries for a specific date."""
+
+    def post(self, request):
+        name = request.data.get('name')
+        date = request.data.get('date')
+
+        if not name or not date:
+            return Response(
+                {'error': 'name and date are required'},
+                status=400
+            )
+
+        # Get unique exercises for the date
+        workout_sets = WorkoutSet.objects.filter(date=date).exclude(exercise='').order_by('exercise')
+        if not workout_sets.exists():
+            return Response(
+                {'error': 'No workouts found for this date'},
+                status=404
+            )
+
+        # Create routine
+        routine = Routine.objects.create(name=name)
+
+        # Add exercises to routine with their logged defaults
+        exercises_added = set()
+        for ws in workout_sets:
+            if ws.exercise not in exercises_added:
+                exercises_added.add(ws.exercise)
+                # Find all sets for this exercise on this date
+                all_sets = workout_sets.filter(exercise=ws.exercise)
+                # Use the most recent set's values as defaults
+                latest = all_sets.first()
+                RoutineExercise.objects.create(
+                    routine=routine,
+                    exercise=latest.exercise,
+                    weight=latest.weight,
+                    reps=latest.reps,
+                    sets=latest.sets,
+                    notes=latest.notes
+                )
+
+        serializer = RoutineSerializer(routine)
+        return Response(serializer.data, status=201)
 
 
 class SummaryView(APIView):

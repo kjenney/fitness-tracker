@@ -133,6 +133,37 @@ tr.editing td { background: #12141c; }
 
 h2 { font-size: 1.25rem; margin-bottom: 1rem; }
 
+/* Workout date row for "Create Routine" button */
+.workout-date-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.workout-date-row button {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.workout-date-row button:hover { background: rgba(99, 102, 241, 0.1); }
+
+/* Modal */
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+.modal h3 { margin-bottom: 0.75rem; }
+.modal > p { color: var(--muted); margin-bottom: 1rem; }
+.modal input[type="text"] { width: 100%; margin-bottom: 1rem; }
+.modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+.modal-actions button { padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; }
+.modal-actions button:first-of-type { background: var(--accent); color: white; }
+.modal-actions button:first-of-type:hover { background: var(--accent-hover); }
+.modal-actions button:last-of-type { background: var(--border); color: var(--text); }
+.modal-actions button:last-of-type:hover { background: #3a3d4a; }
+
 @media (max-width: 640px) {
   .grid { grid-template-columns: 1fr; }
   .form { flex-direction: column; }
