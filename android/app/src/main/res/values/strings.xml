@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FitTrack</string>
+    <string name="widget_title">Quick Log</string>
+    <string name="widget_empty">Open FitTrack to log\n(no recent sets yet)</string>
+    <string name="widget_description">Quickly log your most recent lifts from the home screen.</string>
+</resources>

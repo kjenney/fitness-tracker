@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="accent">#66BB6A</color>
+    <color name="bad">#C62828</color>
+    <color name="cardBg">#FFFFFF</color>
+    <color name="good">#2E7D32</color>
+    <color name="primary">#2E7D32</color>
+    <color name="primaryDark">#1B5E20</color>
+    <color name="textMuted">#616161</color>
+    <color name="textPrimary">#1B1B1B</color>
+    <color name="windowBg">#F1F8E9</color>
+    <string name="app_name">FitTrack</string>
+    <string name="widget_description">Quickly log your most recent lifts from the home screen.</string>
+    <string name="widget_empty">Open FitTrack to log\n(no recent sets yet)</string>
+    <string name="widget_title">Quick Log</string>
+    <style name="Theme.FitTrack" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primaryDark</item>
+        <item name="colorAccent">@color/accent</item>
+        <item name="android:windowBackground">@color/windowBg</item>
+        <item name="android:textColorPrimary">@color/textPrimary</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>

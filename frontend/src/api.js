@@ -1,6 +1,5 @@
 const BASE = '/api'
 
-
 async function req(path, options = {}) {
   const res = await fetch(BASE + path, {
     headers: { 'Content-Type': 'application/json' },
@@ -20,19 +19,12 @@ async function req(path, options = {}) {
 
 export const api = {
   summary: () => req('/summary/'),
-  exerciseProgress: () => req('/exercise-progress/'),
-  allWorkouts: () => req('/all-workouts/'),
-  exercises: {
-    list: () => req('/exercises/'),
-    create: (data) => req('/exercises/', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id, data) => req(`/exercises/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }),
-    remove: (id) => req(`/exercises/${id}/`, { method: 'DELETE' }),
-  },
+  exercises: () => req('/exercises/'),
   workouts: {
     list: (date) => req('/workouts/' + (date ? `?date=${date}` : '')),
     create: (data) => req('/workouts/', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id, data) => req(`/workouts/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }),
     remove: (id) => req(`/workouts/${id}/`, { method: 'DELETE' }),
-    lastForExercise: (exercise) => req('/last-workout/' + (exercise ? `?exercise=${encodeURIComponent(exercise)}` : '')),
   },
   food: {
     list: (date) => req('/food/' + (date ? `?date=${date}` : '')),
@@ -43,14 +35,6 @@ export const api = {
     list: () => req('/bodycomp/'),
     create: (data) => req('/bodycomp/', { method: 'POST', body: JSON.stringify(data) }),
     remove: (id) => req(`/bodycomp/${id}/`, { method: 'DELETE' }),
-  },
-  routines: {
-    list: () => req('/routines/'),
-    create: (data) => req('/routines/', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id, data) => req(`/routines/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }),
-    remove: (id) => req(`/routines/${id}/`, { method: 'DELETE' }),
-    addToDay: (id, date) => req(`/routines/${id}/add-to-day/`, { method: 'POST', body: JSON.stringify({ date }) }),
-    createFromWorkout: (data) => req('/routines/from-workout/', { method: 'POST', body: JSON.stringify(data) }),
   },
 }
 

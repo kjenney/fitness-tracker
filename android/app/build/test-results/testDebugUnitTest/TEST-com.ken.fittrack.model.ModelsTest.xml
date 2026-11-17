@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ken.fittrack.model.ModelsTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-11-17T09:15:17" hostname="c95f7055384c" time="0.007">
+  <properties/>
+  <testcase name="workoutCreate_nullFieldsOmitCorrectly" classname="com.ken.fittrack.model.ModelsTest" time="0.001"/>
+  <testcase name="bodyComp_deserializesFromApiShape" classname="com.ken.fittrack.model.ModelsTest" time="0.001"/>
+  <testcase name="foodCreate_serializesCorrectly" classname="com.ken.fittrack.model.ModelsTest" time="0.001"/>
+  <testcase name="workoutCreate_serializesCorrectly" classname="com.ken.fittrack.model.ModelsTest" time="0.0"/>
+  <testcase name="summary_deserializesFromApiShape" classname="com.ken.fittrack.model.ModelsTest" time="0.001"/>
+  <testcase name="exercise_deserializesFromApiShape" classname="com.ken.fittrack.model.ModelsTest" time="0.001"/>
+  <testcase name="foodEntry_deserializesFromApiShape" classname="com.ken.fittrack.model.ModelsTest" time="0.001"/>
+  <testcase name="workoutSet_deserializesFromApiShape" classname="com.ken.fittrack.model.ModelsTest" time="0.0"/>
+  <testcase name="bodyCompCreate_serializesCorrectly" classname="com.ken.fittrack.model.ModelsTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

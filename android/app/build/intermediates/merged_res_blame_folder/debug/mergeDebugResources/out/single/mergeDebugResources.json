@@ -1,0 +1,86 @@
+[
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-debug-38:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-debug-38:/drawable_ic_dashboard.xml.flat",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/drawable/ic_dashboard.xml"
+    },
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-debug-38:/mipmap_ic_launcher.xml.flat",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/mipmap/ic_launcher.xml"
+    },
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-debug-38:/layout_fragment_bodycomp.xml.flat",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/layout/fragment_bodycomp.xml"
+    },
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-debug-38:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-debug-38:/layout_fragment_dashboard.xml.flat",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/layout/fragment_dashboard.xml"
+    },
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-debug-38:/drawable_ic_food.xml.flat",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/drawable/ic_food.xml"
+    },
+    {
+        "merged": "com.ken.fittrack.app-debug-38:/drawable_widget_bg.xml.flat",
+        "source": "com.ken.fittrack.app-main-40:/drawable/widget_bg.xml"
+    },
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-debug-38:/drawable_ic_workout.xml.flat",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/drawable/ic_workout.xml"
+    },
+    {
+        "merged": "com.ken.fittrack.app-debug-38:/layout_widget_row.xml.flat",
+        "source": "com.ken.fittrack.app-main-40:/layout/widget_row.xml"
+    },
+    {
+        "merged": "com.ken.fittrack.app-debug-38:/xml_widget_info.xml.flat",
+        "source": "com.ken.fittrack.app-main-40:/xml/widget_info.xml"
+    },
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-debug-38:/drawable_ic_bodycomp.xml.flat",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/drawable/ic_bodycomp.xml"
+    },
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-debug-38:/layout_activity_main.xml.flat",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/layout/activity_main.xml"
+    },
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-debug-38:/layout_row_entry.xml.flat",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/layout/row_entry.xml"
+    },
+    {
+        "merged": "com.ken.fittrack.app-debug-38:/drawable_ic_chevron.xml.flat",
+        "source": "com.ken.fittrack.app-main-40:/drawable/ic_chevron.xml"
+    },
+    {
+        "merged": "com.ken.fittrack.app-debug-38:/layout_widget_quick_log.xml.flat",
+        "source": "com.ken.fittrack.app-main-40:/layout/widget_quick_log.xml"
+    },
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-debug-38:/layout_fragment_food.xml.flat",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/layout/fragment_food.xml"
+    },
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-debug-38:/color_nav_item_color.xml.flat",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/color/nav_item_color.xml"
+    },
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-debug-38:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-debug-38:/menu_bottom_nav_menu.xml.flat",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/menu/bottom_nav_menu.xml"
+    },
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-debug-38:/layout_fragment_workout.xml.flat",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/layout/fragment_workout.xml"
+    }
+]

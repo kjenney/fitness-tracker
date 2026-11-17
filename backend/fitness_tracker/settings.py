@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,8 +31,7 @@ ROOT_URLCONF = "fitness_tracker.urls"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        # Override with FITNESS_DB_PATH (docker-compose points this at the mounted /data dir)
-        "NAME": Path(os.environ.get("FITNESS_DB_PATH", str(BASE_DIR / "db.sqlite3"))),
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ken.fittrack.api.ApiLiveTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-17T09:15:16" hostname="c95f7055384c" time="0.383">
+  <properties/>
+  <testcase name="getSummary_returnsValidShape" classname="com.ken.fittrack.api.ApiLiveTest" time="0.253"/>
+  <testcase name="getExercises_returnsList" classname="com.ken.fittrack.api.ApiLiveTest" time="0.006"/>
+  <testcase name="createAndDeleteWorkout_roundTrip" classname="com.ken.fittrack.api.ApiLiveTest" time="0.124"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

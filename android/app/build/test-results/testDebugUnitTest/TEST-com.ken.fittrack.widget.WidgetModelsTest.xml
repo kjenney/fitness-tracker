@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ken.fittrack.widget.WidgetModelsTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-11-17T09:15:16" hostname="c95f7055384c" time="0.023">
+  <properties/>
+  <testcase name="capsAtMaxEntriesMostRecentFirst" classname="com.ken.fittrack.widget.WidgetModelsTest" time="0.015"/>
+  <testcase name="bodyweightSetPreservesNulls" classname="com.ken.fittrack.widget.WidgetModelsTest" time="0.007"/>
+  <testcase name="dedupesToOneMostRecentPerExercise" classname="com.ken.fittrack.widget.WidgetModelsTest" time="0.0"/>
+  <testcase name="nullCreatedAtTolerated" classname="com.ken.fittrack.widget.WidgetModelsTest" time="0.0"/>
+  <testcase name="emptyInput_yieldsEmptyWidget" classname="com.ken.fittrack.widget.WidgetModelsTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

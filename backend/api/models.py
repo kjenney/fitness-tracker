@@ -1,13 +1,6 @@
 from django.db import models
 
 
-# Import MET calculation - placed after model definitions to avoid circular import
-def _calculate_workout_calories(weight, exercise, sets, reps=None):
-    """Calculate calories burned for a workout set."""
-    from .mets import calculate_calories
-    return calculate_calories(weight, exercise, sets, reps)
-
-
 class WorkoutSet(models.Model):
     """One logged exercise: type, weight, reps (plus optional sets/notes)."""
 
@@ -16,7 +9,6 @@ class WorkoutSet(models.Model):
     weight = models.FloatField(null=True, blank=True, help_text="lb (blank = bodyweight)")
     reps = models.IntegerField(null=True, blank=True)
     sets = models.IntegerField(default=1)
-    calories_burned = models.FloatField(null=True, blank=True, help_text="Calories burned during this set")
     notes = models.CharField(max_length=300, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -28,24 +20,11 @@ class WorkoutSet(models.Model):
         r = f" x {self.reps}" if self.reps else ""
         return f"{self.date} {self.exercise}{w}{r}"
 
-    def save(self, *args, **kwargs):
-        """Override save to automatically calculate calories_burned if weight is set."""
-        # Only calculate if we have weight and no calories_burned is set
-        if self.weight and self.calories_burned is None:
-            self.calories_burned = _calculate_workout_calories(
-                weight=self.weight,
-                exercise=self.exercise,
-                sets=self.sets,
-                reps=self.reps
-            )
-        super().save(*args, **kwargs)
-
 
 class Exercise(models.Model):
     """Exercise library — suggestions for the workout log form."""
 
     name = models.CharField(max_length=200, unique=True)
-    url = models.URLField(blank=True, default="", help_text="Link to form/instruction (e.g. exercise video or database page)")
 
     class Meta:
         ordering = ["name"]
@@ -81,26 +60,11 @@ class FoodEntry(models.Model):
 
 
 class BodyComp(models.Model):
-    """Weight + body composition readings."""
+    """Weight + body fat percentage readings."""
 
     date = models.DateField()
     weight_lb = models.FloatField()
     body_fat_pct = models.FloatField(null=True, blank=True)
-    muscle_rate = models.FloatField(null=True, blank=True, help_text="Muscle Rate (%)")
-    lean_body_mass = models.FloatField(null=True, blank=True, help_text="Lean Body Mass (lb)")
-    subcutaneous_fat = models.FloatField(null=True, blank=True, help_text="Subcutaneous Fat (%)")
-    visceral_fat = models.FloatField(null=True, blank=True, help_text="Visceral Fat level (1-50)")
-    body_water = models.FloatField(null=True, blank=True, help_text="Body Water (%)")
-    skeletal_mass_rate = models.FloatField(null=True, blank=True, help_text="Skeletal Muscle Mass Rate (%)")
-    muscle_mass = models.FloatField(null=True, blank=True, help_text="Muscle Mass (lb)")
-    bone_mass = models.FloatField(null=True, blank=True, help_text="Bone Mass (lb)")
-    protein = models.FloatField(null=True, blank=True, help_text="Protein (%)")
-    basal_metabolism = models.FloatField(null=True, blank=True, help_text="Basal Metabolic Rate (kcal/day)")
-    body_age = models.IntegerField(null=True, blank=True, help_text="Body Age (years)")
-    waist_hip_ratio = models.FloatField(null=True, blank=True, help_text="Waist-to-Hip Ratio")
-    body_fat_mass = models.FloatField(null=True, blank=True, help_text="Body Fat Mass (lb)")
-    water_content = models.FloatField(null=True, blank=True, help_text="Water Content (lb)")
-    protein_mass = models.FloatField(null=True, blank=True, help_text="Protein Mass (lb)")
     notes = models.CharField(max_length=300, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -110,35 +74,3 @@ class BodyComp(models.Model):
     def __str__(self):
         bf = f" / {self.body_fat_pct:g}% BF" if self.body_fat_pct is not None else ""
         return f"{self.date} {self.weight_lb:g} lb{bf}"
-
-
-class Routine(models.Model):
-    """A reusable workout routine - a collection of exercises to be logged together."""
-
-    name = models.CharField(max_length=200, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["name"]
-
-    def __str__(self):
-        return self.name
-
-
-class RoutineExercise(models.Model):
-    """An exercise within a routine, with default values."""
-
-    routine = models.ForeignKey(Routine, on_delete=models.CASCADE, related_name="exercises")
-    exercise = models.ForeignKey(Exercise, on_delete=models.PROTECT, help_text="The exercise to perform")
-    weight = models.FloatField(null=True, blank=True, help_text="Default weight (lb, blank = bodyweight)")
-    reps = models.IntegerField(null=True, blank=True)
-    sets = models.IntegerField(default=1)
-    notes = models.CharField(max_length=300, blank=True, default="")
-
-    class Meta:
-        ordering = ["id"]
-
-    def __str__(self):
-        w = f" {self.weight:g} lb" if self.weight else ""
-        r = f" x {self.reps}" if self.reps else ""
-        return f"{self.routine.name}: {self.exercise.name}{w}{r}"

@@ -1,0 +1,34 @@
+[
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-mergeDebugResources-37:/layout/row_entry.xml",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/layout/row_entry.xml"
+    },
+    {
+        "merged": "com.ken.fittrack.app-mergeDebugResources-37:/layout/widget_row.xml",
+        "source": "com.ken.fittrack.app-main-40:/layout/widget_row.xml"
+    },
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-mergeDebugResources-37:/layout/fragment_workout.xml",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/layout/fragment_workout.xml"
+    },
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-mergeDebugResources-37:/layout/activity_main.xml",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/layout/activity_main.xml"
+    },
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-mergeDebugResources-37:/layout/fragment_dashboard.xml",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/layout/fragment_dashboard.xml"
+    },
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-mergeDebugResources-37:/layout/fragment_food.xml",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/layout/fragment_food.xml"
+    },
+    {
+        "merged": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-mergeDebugResources-37:/layout/fragment_bodycomp.xml",
+        "source": "/opt/data/.gradle/daemon/8.7/com.ken.fittrack.app-main-40:/layout/fragment_bodycomp.xml"
+    },
+    {
+        "merged": "com.ken.fittrack.app-mergeDebugResources-37:/layout/widget_quick_log.xml",
+        "source": "com.ken.fittrack.app-main-40:/layout/widget_quick_log.xml"
+    }
+]
