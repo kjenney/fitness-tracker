@@ -25,6 +25,7 @@ class Exercise(models.Model):
     """Exercise library — suggestions for the workout log form."""
 
     name = models.CharField(max_length=200, unique=True)
+    url = models.URLField(blank=True, default="", help_text="Link to form/instruction (e.g. exercise video or database page)")
 
     class Meta:
         ordering = ["name"]
