@@ -36,6 +36,12 @@ export const api = {
     create: (data) => req('/bodycomp/', { method: 'POST', body: JSON.stringify(data) }),
     remove: (id) => req(`/bodycomp/${id}/`, { method: 'DELETE' }),
   },
+  routines: {
+    list: () => req('/routines/'),
+    create: (data) => req('/routines/', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id, data) => req(`/routines/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }),
+    remove: (id) => req(`/routines/${id}/`, { method: 'DELETE' }),
+  },
 }
 
 export const todayStr = () => new Date().toISOString().slice(0, 10)

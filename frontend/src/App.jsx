@@ -21,6 +21,7 @@ export default function App() {
           <button className={tab === 'workout' ? 'active' : ''} onClick={() => setTab('workout')}>Workout</button>
           <button className={tab === 'food' ? 'active' : ''} onClick={() => setTab('food')}>Food</button>
           <button className={tab === 'bodycomp' ? 'active' : ''} onClick={() => setTab('bodycomp')}>Body Comp</button>
+          <button className={tab === 'routines' ? 'active' : ''} onClick={() => setTab('routines')}>Routines</button>
         </nav>
       </header>
       {error && <div className="error">{error} <button onClick={() => setError('')}>×</button></div>}
@@ -29,6 +30,7 @@ export default function App() {
         {tab === 'workout' && <WorkoutTab onChanged={refresh} />}
         {tab === 'food' && <FoodTab summary={summary} onChanged={refresh} />}
         {tab === 'bodycomp' && <BodyCompTab />}
+        {tab === 'routines' && <RoutinesTab />}
       </main>
     </div>
   )
@@ -340,6 +342,150 @@ function BodyCompTab() {
             )
           })}
           {readings.length === 0 && <tr><td colSpan="6" className="muted">No readings yet</td></tr>}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+/* ─── Routines Tab ─── */
+function RoutinesTab() {
+  const [routines, setRoutines] = useState([])
+  const [exercises, setExercises] = useState([])
+  const [form, setForm] = useState({ name: '', exercises: [] })
+  const [editing, setEditing] = useState(null)
+  const [showExerciseModal, setShowExerciseModal] = useState(false)
+  const [selectedExercises, setSelectedExercises] = useState([])
+
+  useEffect(() => {
+    api.routines.list().then(setRoutines).catch(() => {})
+    api.exercises().then(setExercises).catch(() => {})
+  }, [])
+
+  const openCreate = () => {
+    setForm({ name: '', exercises: [] })
+    setSelectedExercises([])
+    setEditing(null)
+    setShowExerciseModal(false)
+  }
+
+  const openEdit = (routine) => {
+    setForm({ name: routine.name, exercises: routine.exercises || [] })
+    setSelectedExercises(routine.exercises || [])
+    setEditing(routine)
+    setShowExerciseModal(false)
+  }
+
+  const addExerciseToRoutine = (exerciseId) => {
+    const ex = exercises.find(e => e.id === exerciseId)
+    if (ex && !selectedExercises.find(se => se.exercise === exerciseId)) {
+      setSelectedExercises([...selectedExercises, {
+        id: null,
+        exercise: exerciseId,
+        weight: '',
+        reps: '',
+        sets: '1',
+        notes: ''
+      }])
+    }
+  }
+
+  const removeExerciseFromRoutine = (index) => {
+    setSelectedExercises(selectedExercises.filter((_, i) => i !== index))
+  }
+
+  const updateExercise_field = (index, field, value) => {
+    const newExercises = [...selectedExercises]
+    newExercises[index] = { ...newExercises[index], [field]: value }
+    setSelectedExercises(newExercises)
+  }
+
+  const submit = (e) => {
+    e.preventDefault()
+    const payload = {
+      name: form.name,
+      exercises: selectedExercises.map(ex => ({
+        id: ex.id,
+        exercise: ex.exercise,
+        weight: ex.weight ? +ex.weight : null,
+        reps: ex.reps ? +ex.reps : null,
+        sets: ex.sets ? +ex.sets : 1,
+        notes: ex.notes || ''
+      }))
+    }
+    if (editing) {
+      api.routines.update(editing.id, payload).then(() => {
+        setEditing(null)
+        setForm({ name: '', exercises: [] })
+        setSelectedExercises([])
+        api.routines.list().then(setRoutines)
+      })
+    } else {
+      api.routines.create(payload).then(() => {
+        setForm({ name: '', exercises: [] })
+        setSelectedExercises([])
+        api.routines.list().then(setRoutines)
+      })
+    }
+  }
+
+  const remove = (id) => {
+    api.routines.remove(id).then(() => api.routines.list().then(setRoutines))
+  }
+
+  return (
+    <div>
+      <h2>Routines</h2>
+      <form className="form" onSubmit={submit}>
+        <input type="text" placeholder="Routine name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+
+        <div className="routine-exercises">
+          <h4>Exercises</h4>
+          {selectedExercises.map((ex, idx) => (
+            <div key={idx} className="routine-exercise-row">
+              <select value={ex.exercise || ''} onChange={e => updateExercise_field(idx, 'exercise', e.target.value)} required>
+                <option value="">Select exercise...</option>
+                {exercises.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
+              </select>
+              <input type="number" placeholder="Weight (lb)" min="0" step="5" value={ex.weight || ''} onChange={e => updateExercise_field(idx, 'weight', e.target.value)} />
+              <input type="number" placeholder="Reps" min="0" value={ex.reps || ''} onChange={e => updateExercise_field(idx, 'reps', e.target.value)} />
+              <input type="number" placeholder="Sets" min="1" value={ex.sets || '1'} onChange={e => updateExercise_field(idx, 'sets', e.target.value)} />
+              <input type="text" placeholder="Notes" value={ex.notes || ''} onChange={e => updateExercise_field(idx, 'notes', e.target.value)} />
+              <button type="button" className="btn-sm" onClick={() => removeExerciseFromRoutine(idx)}>×</button>
+            </div>
+          ))}
+          <button type="button" onClick={() => setShowExerciseModal(true)}>Add Exercise</button>
+        </div>
+
+        <button type="submit">{editing ? 'Save' : 'Create'} Routine</button>
+      </form>
+
+      {showExerciseModal && (
+        <div className="modal">
+          <h3>Add Exercise</h3>
+          <select onChange={e => { addExerciseToRoutine(e.target.value); e.target.value = ''; }}>
+            <option value="">Select exercise...</option>
+            {exercises.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
+          </select>
+          <button onClick={() => setShowExerciseModal(false)}>Close</button>
+        </div>
+      )}
+
+      <h3 className="section-title">Saved Routines</h3>
+      <table className="table">
+        <thead><tr><th>Name</th><th>Exercises</th><th></th></tr></thead>
+        <tbody>
+          {routines.map(r => (
+            <tr key={r.id}>
+              <td>{r.name}</td>
+              <td>{r.exercises ? r.exercises.map(e => e.exercise_name).join(', ') : 'No exercises'}</td>
+              <td className="row-actions">
+                <button className="btn-sm edit" onClick={() => openEdit(r)}>Edit</button>
+                <button className="btn-sm" onClick={() => remove(r.id)}>×</button>
+              </td>
+            </tr>
+          ))}
+          {routines.length === 0 && <tr><td colSpan="3" className="muted">No routines yet</td></tr>}
         </tbody>
       </table>
     </div>

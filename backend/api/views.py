@@ -6,8 +6,8 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import BodyComp, Exercise, FoodEntry, WorkoutSet
-from .serializers import BodyCompSerializer, ExerciseSerializer, FoodSerializer, WorkoutSerializer
+from .models import BodyComp, Exercise, FoodEntry, Routine, WorkoutSet
+from .serializers import BodyCompSerializer, ExerciseSerializer, FoodSerializer, RoutineSerializer, WorkoutSerializer
 
 
 class ExerciseViewSet(viewsets.ReadOnlyModelViewSet):
@@ -28,6 +28,11 @@ class FoodViewSet(viewsets.ModelViewSet):
 class BodyCompViewSet(viewsets.ModelViewSet):
     queryset = BodyComp.objects.all()
     serializer_class = BodyCompSerializer
+
+
+class RoutineViewSet(viewsets.ModelViewSet):
+    queryset = Routine.objects.all()
+    serializer_class = RoutineSerializer
 
 
 class SummaryView(APIView):
