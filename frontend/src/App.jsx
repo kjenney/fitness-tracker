@@ -96,7 +96,7 @@ function WorkoutTab({ onChanged, setTab }) {
   useEffect(() => {
     api.exercises().then(setExercises).catch(() => {})
     loadEntries()
-  }, [])
+  }, [form.date])
 
   const loadEntries = () => {
     api.workouts.list(form.date).then(setEntries).catch(() => setEntries([]))
